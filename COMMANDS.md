@@ -1,6 +1,6 @@
 # Command reference — 0.5.0 community
 
-52 commands. Analysis pauses when controls are enabled; otherwise pause manually. Poll asynchronous operation IDs through completion.
+53 commands. Analysis pauses when controls are enabled; otherwise pause manually. Poll asynchronous operation IDs through completion.
 
 Known 0.5.0 issue: named district creation/editing can apply successfully and then report an EntityCommandBuffer naming-notification error. Inspect a fresh atlas and the operation result before any retry. Never replay an uncertain mutation. Boundary edits without a name have completed normally. See RELEASE-NOTES.md.
 
@@ -135,3 +135,6 @@ Recommended loop:
 - Missing maps return `unavailable`. A real zero resource result has status `ok`. Buffers are read after completing native writer dependencies; water is the latest completed asynchronous CPU readback, not a promise of same-frame GPU data. Keep analysis paused and inspect `citySession`.
 
 Offline checks cannot validate the live overlay correspondence or water appearance. Before relying on 0.4.4 for site selection, compare dry land, shoreline and open water; fertility/ore/oil/fish areas; and groundwater quantity/pollution against the native game overlays.
+
+## Development junction diagnostics
+`get_junction_snapshot`: live node `index`/`version`; manually paused only, never auto-pauses. See [snapshot contract](JUNCTION-SNAPSHOTS.md).
