@@ -12,6 +12,7 @@ try {
         'Game.Net.EdgeGeometry'=@('m_Start','m_End')
         'Game.Net.EdgeLane'=@('m_EdgeDelta','m_ConnectedStartCount','m_ConnectedEndCount')
         'Game.Net.Composition'=@('m_Edge','m_StartNode','m_EndNode')
+        'Game.Tools.Temp'=@('m_Original','m_Flags')
         'Game.Net.Lane'=@('m_StartNode','m_MiddleNode','m_EndNode')
         'Game.Net.SubLane'=@('m_SubLane','m_PathMethods')
         'Game.Net.TrackLane'=@('m_Flags','m_SpeedLimit','m_Curviness','m_AccessRestriction')
@@ -29,8 +30,8 @@ try {
     }
     $mod=$bridge.MainModule.Types | Where-Object FullName -eq 'CitiesIIAgentBridge.Mod'
     $methods=@($mod.Methods | Where-Object Name -Like 'Junction*')
-    if($methods.Count -ne 10){throw 'Expected snapshot and nine local helpers'}
-    $reads=@('Exists','HasComponent','HasBuffer','GetComponentData','GetBuffer')
+    if($methods.Count -ne 12){throw 'Expected snapshots and ten local helpers'}
+    $reads=@('Exists','HasComponent','HasBuffer','GetComponentData','GetBuffer','CreateEntityQuery')
     foreach($method in $methods) {
         foreach($instruction in $method.Body.Instructions) {
             $operand=$instruction.Operand

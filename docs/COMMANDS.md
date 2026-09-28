@@ -138,3 +138,7 @@ Offline checks cannot validate the live overlay correspondence or water appearan
 
 ## Development junction diagnostics
 `get_junction_snapshot`: live node `index`/`version`; manually paused only, never auto-pauses. See [snapshot contract](JUNCTION-SNAPSHOTS.md).
+
+`get_junction_preview`: permanent node index/version; manually paused read-only
+observation of matching temporary junctions. Not an Apply validation verdict.
+See [preview contract](JUNCTION-SNAPSHOTS.md#preview-observations).

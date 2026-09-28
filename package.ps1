@@ -22,7 +22,7 @@ $files = @(
     'bridge.ps1','advance.ps1','journal.ps1','export-map.ps1','view-map.html',
     'src/BridgeTick.cs','src/BuildCommands.cs','src/CityCommands.cs','src/Construction.cs',
     'src/Diagnostics.cs','src/Mailbox.cs','src/Mod.cs','src/Neighborhood.cs',
-    'src/JunctionSnapshot.cs','src/JunctionInputs.cs','tests/JunctionApiTests.ps1','docs/JUNCTION-SNAPSHOTS.md','src/NetworkCommands.cs','src/ObjectPlacementSafety.cs','src/PlanGeometry.cs',
+    'src/JunctionSnapshot.cs','src/JunctionPreview.cs','src/JunctionInputs.cs','tests/JunctionApiTests.ps1','docs/JUNCTION-SNAPSHOTS.md','src/NetworkCommands.cs','src/ObjectPlacementSafety.cs','src/PlanGeometry.cs',
     'src/QueryPage.cs','src/ServiceDetails.cs','src/ServiceTools.cs','src/Settings.cs',
     'src/SimulationControl.cs','src/SimulationWindow.cs','src/Spatial.cs','src/Workflow.cs',
     'tests/MailboxTests.csproj','tests/Program.cs','tests/PolicyTests.cs',

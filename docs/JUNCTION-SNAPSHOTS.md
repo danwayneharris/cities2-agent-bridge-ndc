@@ -70,3 +70,17 @@ entire native pipeline. Do not claim full arbitrary-network replay from this sch
 
 Verification: compiled against the installed assemblies; native component checks and
 compiled read-only checks pass. Schema-2 live capture is pending deployment/restart.
+## Preview observations
+
+`get_junction_preview` accepts the permanent node index/version, requires a manually
+paused city, and never enables controls or auto-pauses. It searches at most 4096
+temporary nodes, matching Temp.m_Original. Status is missing, ambiguous, or observed.
+Exactly one match returns a nested schema-2 snapshot permitting temporary entities;
+owner/lane temp fields report original identities and flags (null for permanent).
+Existing get_junction_snapshot still excludes temporary entities.
+
+validationReady is always false. This query has no tool-revision correlation and
+cannot establish completed rebuilding; missing is not proof of disconnection.
+Do not use it to authorize Apply. The next live test is an endpoint-junction preview
+with the slider stationary, followed by repeated capture and eventual comparison
+to an authorized Apply on the toy save. Compilation/API checks passed; live pending.

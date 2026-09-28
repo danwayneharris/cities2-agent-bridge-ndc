@@ -13,7 +13,7 @@ namespace CitiesIIAgentBridge
     public sealed partial class Mod
     {
         // A bounded observation of native data. Never pauses, schedules jobs, or edits entities.
-        private JObject JunctionSnapshot(JObject args)
+        private JObject JunctionSnapshot(JObject args, bool preview = false)
         {
             var world = RequireCity();
             var simulation = world.GetExistingSystemManaged<SimulationSystem>();
@@ -21,9 +21,9 @@ namespace CitiesIIAgentBridge
                 throw new InvalidOperationException("pause_game_before_junction_snapshot");
             var em = world.EntityManager;
             var node = new Entity { Index = RequiredInt(args, "index"), Version = RequiredInt(args, "version") };
-            if (!JunctionLive(em, node) || !em.HasComponent<Node>(node))
+            if (!JunctionLive(em, node, preview) || !em.HasComponent<Node>(node))
                 throw new ArgumentException("live_network_node_required");
-            var errors = new JArray();
+            if (preview && !em.HasComponent<Temp>(node)) throw new ArgumentException("temporary_node_required"); var errors = new JArray();
             var owners = new JArray();
             var lanes = new JArray();
             var identities = new List<PathNode>();
@@ -48,19 +48,19 @@ namespace CitiesIIAgentBridge
                 if (!visitedOwners.Add(owner)) continue;
                 var row = NativeBuild.Id(owner);
                 owners.Add(row);
-                row["live"] = JunctionLive(em, owner);
-                if (!JunctionLive(em, owner)) { errors.Add("unavailable_owner:" + owner.Index + ":" + owner.Version); continue; }
-                JunctionInputs(em, owner, row, errors);
+                row["live"] = JunctionLive(em, owner, preview);
+                if (!JunctionLive(em, owner, preview)) { errors.Add("unavailable_owner:" + owner.Index + ":" + owner.Version); continue; }
+                JunctionInputs(em, owner, row, errors); if (preview) row["temp"] = JunctionTemp(em, owner);
                 row["updated"] = em.HasComponent<Updated>(owner);
                 row["created"] = em.HasComponent<Created>(owner);
                 if (em.HasComponent<Node>(owner)) row["position"] = Vector(em.GetComponentData<Node>(owner).m_Position);
                 if (em.HasComponent<Edge>(owner))
                 {
                     var edge = em.GetComponentData<Edge>(owner);
-                    row["startNode"] = JunctionEndpoint(em, edge.m_Start);
-                    row["endNode"] = JunctionEndpoint(em, edge.m_End);
-                    if (!JunctionLive(em, edge.m_Start) || !em.HasComponent<Node>(edge.m_Start)
-                        || !JunctionLive(em, edge.m_End) || !em.HasComponent<Node>(edge.m_End)) errors.Add("unavailable_edge_endpoint:" + owner.Index);
+                    row["startNode"] = JunctionEndpoint(em, edge.m_Start, preview);
+                    row["endNode"] = JunctionEndpoint(em, edge.m_End, preview);
+                    if (!JunctionLive(em, edge.m_Start, preview) || !em.HasComponent<Node>(edge.m_Start)
+                        || !JunctionLive(em, edge.m_End, preview) || !em.HasComponent<Node>(edge.m_End)) errors.Add("unavailable_edge_endpoint:" + owner.Index);
                     if (edge.m_Start != node && edge.m_End != node) errors.Add("incident_edge_not_attached:" + owner.Index);
                 }
                 else if (owner != node) errors.Add("missing_edge_component:" + owner.Index);
@@ -79,12 +79,12 @@ namespace CitiesIIAgentBridge
                     if (!visitedLanes.Add(entity)) continue;
                     var laneRow = NativeBuild.Id(entity);
                     lanes.Add(laneRow);
-                    laneRow["live"] = JunctionLive(em, entity);
-                    if (!JunctionLive(em, entity) || !em.HasComponent<Lane>(entity))
+                    laneRow["live"] = JunctionLive(em, entity, preview);
+                    if (!JunctionLive(em, entity, preview) || !em.HasComponent<Lane>(entity))
                     { errors.Add("unavailable_lane:" + entity.Index); continue; }
                     laneRow["updated"] = em.HasComponent<Updated>(entity);
                     laneRow["created"] = em.HasComponent<Created>(entity);
-                    JunctionInputs(em, entity, laneRow, errors);
+                    JunctionInputs(em, entity, laneRow, errors); if (preview) laneRow["temp"] = JunctionTemp(em, entity);
                     laneRow["secondary"] = em.HasComponent<SecondaryLane>(entity);
                     laneRow["master"] = em.HasComponent<MasterLane>(entity);
                     laneRow["slave"] = em.HasComponent<SlaveLane>(entity);
@@ -116,20 +116,20 @@ namespace CitiesIIAgentBridge
                 }
             }
             return new JObject {
-                ["schemaVersion"] = 2, ["snapshotId"] = Guid.NewGuid().ToString("N"), ["citySession"] = citySession,
+                ["schemaVersion"] = 2, ["scope"] = preview ? "preview-observation" : "permanent", ["snapshotId"] = Guid.NewGuid().ToString("N"), ["citySession"] = citySession,
                 ["capturedUtc"] = DateTime.UtcNow.ToString("O"), ["simulationFrame"] = simulation.frameIndex,
                 ["junction"] = NativeBuild.Id(node), ["incidentEdges"] = incident, ["owners"] = owners, ["lanes"] = lanes,
                 ["complete"] = errors.Count == 0, ["errors"] = errors,
                 ["meaning"] = "Native local lane data, not proof of vehicle routing or completed rebuild. Matching equalityId values mean PathNode.Equals within this snapshot only. Owner indices lack entity versions."
             };
         }
-        private static bool JunctionLive(EntityManager em, Entity entity) => entity != Entity.Null && em.Exists(entity)
-            && !em.HasComponent<Deleted>(entity) && !em.HasComponent<Temp>(entity);
-        private static JObject JunctionEndpoint(EntityManager em, Entity entity)
+        private static bool JunctionLive(EntityManager em, Entity entity, bool preview = false) => entity != Entity.Null && em.Exists(entity)
+            && !em.HasComponent<Deleted>(entity) && (preview || !em.HasComponent<Temp>(entity));
+        private static JObject JunctionEndpoint(EntityManager em, Entity entity, bool preview = false)
         {
             var result = NativeBuild.Id(entity);
-            result["live"] = JunctionLive(em, entity);
-            if (JunctionLive(em, entity) && em.HasComponent<Node>(entity)) result["position"] = Vector(em.GetComponentData<Node>(entity).m_Position);
+            result["live"] = JunctionLive(em, entity, preview);
+            if (JunctionLive(em, entity, preview) && em.HasComponent<Node>(entity)) result["position"] = Vector(em.GetComponentData<Node>(entity).m_Position);
             return result;
         }
         private static JToken JunctionCurve(EntityManager em, Entity entity)
