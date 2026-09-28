@@ -168,3 +168,25 @@ resume simulation according to game/save settings. No automatic pause is promise
 The named test save was found uniquely and its identity validated read-only. No
 restart or load was executed during this investigation. The asset must be indexed
 by the game's asset database; existence of a file alone does not establish that.
+
+### Live test result: direct launch disabled
+
+The direct executable experiment failed on this installation: Player.log reported
+platform-service initialization failure followed by fatal asset-database errors
+and repeated uninitialized-world exceptions. No fresh bridge heartbeat appeared.
+The failed process was stopped after a graceful-close request failed; no city had
+been loaded. The helper now permits inspection only and rejects -Launch until a
+Steam-context launch path is verified. Earlier launch examples document the
+experiment, not a currently supported restart workflow.
+
+Steam's ordinary Play action still opens the Paradox launcher (user confirmed).
+A launcher-bypass configuration preserving Steam's environment may work, but was
+not configured or verified. Do not rewrite Steam settings, spoof launcher tokens,
+or disable platform services to make this experiment pass. Native --startGame
+support is established from source; actual loading/playset retention remains untested.
+
+Control persistence is deliberately disabled in Settings defaults and Mod.OnPreload.
+A scoped test-session authorization would need to bind to the actual loaded save
+identity, expire, and honor STOP and city transitions. It is not implemented; do
+not remove the reset simply to automate restarts. Manual checkbox activation remains
+necessary for bridge checkpoints on the currently installed version.

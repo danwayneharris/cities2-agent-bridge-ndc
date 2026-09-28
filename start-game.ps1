@@ -39,6 +39,7 @@ $plan = [pscustomobject]@{
 }
 $plan
 if (!$Launch) { return }
+throw 'Direct launch failed platform initialization in live testing. Launch disabled pending a verified Steam-context implementation; see INSTALL.md.'
 if ($running.Count) { throw 'Cities2 is already running. No process was stopped or restarted.' }
 if ($PSCmdlet.ShouldProcess($exe, 'Launch CS2 directly without the Paradox launcher')) {
     # Only the explicitly selected native save-load argument; no settings/save writes.
