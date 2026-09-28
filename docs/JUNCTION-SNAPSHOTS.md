@@ -92,3 +92,19 @@ bounds its scan to 4096 temporary edges, original incidents to 64, and SubLane
 references to 4096 per edge. It reports original/temporary endpoint identities,
 curves, composition inputs, Updated and SubLane identities. This is diagnostic
 adjacency evidence, not a completed lane snapshot or connectivity verdict.
+
+### Connected replacement junction
+
+Preview responses now retain the original-match `snapshot` and separately return
+`topologyResolution` and, when resolved, `connectedSnapshot`. Resolution requires
+exactly one preview edge for every original incident edge and one endpoint identity
+shared by them all. Indices AND versions are compared; positions are never used.
+Missing, ambiguous, incomplete, unsupported and unavailable are explicit statuses.
+The related-edge response now includes expectedOriginalEdges for reproduction.
+Multiple copies of an original edge fail closed rather than choosing one arbitrarily.
+
+Run tests/PreviewJunctionResolverTests.ps1 against the saved NetworkTools capture.
+This compiles and exercises the same pure C# resolver used in-game. The connected
+snapshot path compiles but needs live verification after deployment. Collection
+success still does not mean current tool revision or completed reconstruction;
+validationReady remains false.

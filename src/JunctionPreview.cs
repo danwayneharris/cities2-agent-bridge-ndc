@@ -56,13 +56,15 @@ namespace CitiesIIAgentBridge {
                     }
                 }
             }
-            return new JObject { ["edges"] = rows, ["complete"] = errors.Count == 0, ["errors"] = errors };
+            var expected = new JArray(); foreach (var edge in originals) expected.Add(NativeBuild.Id(edge));
+            return new JObject { ["expectedOriginalEdges"] = expected, ["edges"] = rows, ["complete"] = errors.Count == 0, ["errors"] = errors };
         }
         private static bool JunctionPreviewEndpointMatches(EntityManager em, Entity endpoint, Entity original) {
             if (endpoint == original) return true;
             return JunctionLive(em, endpoint, true) && em.HasComponent<Temp>(endpoint)
                 && em.GetComponentData<Temp>(endpoint).m_Original == original;
         }
+        private static string JunctionIdentity(JToken id) => (int)id["index"] + ":" + (int)id["version"];
         private JObject JunctionPreview(JObject args) {
             var world = RequireCity();
             var simulation = world.GetExistingSystemManaged<SimulationSystem>();
@@ -92,6 +94,21 @@ namespace CitiesIIAgentBridge {
                 ["meaning"] = "Observation only: no tool revision association or completed-rebuild guarantee. Never use to authorize Apply." };
             if (matches.Count == 1) result["snapshot"] = JunctionSnapshot(NativeBuild.Id(candidate), true);
             result["relatedPreviewEdges"] = JunctionPreviewEdges(em, original);
+            var related = (JObject)result["relatedPreviewEdges"];
+            var expected = new System.Collections.Generic.List<string>();
+            foreach (var id in (JArray)related["expectedOriginalEdges"]) expected.Add(JunctionIdentity(id));
+            var rows = new System.Collections.Generic.List<string[]>();
+            foreach (var edge in (JArray)related["edges"])
+                rows.Add(new[] { JunctionIdentity(edge["temp"]["original"]), JunctionIdentity(edge["startNode"]), JunctionIdentity(edge["endNode"]) });
+            var resolution = PreviewJunctionResolver.Resolve(expected.ToArray(), rows.ToArray(), (bool)related["complete"]);
+            result["topologyResolution"] = new JObject { ["status"] = resolution.Status, ["candidates"] = new JArray(resolution.Candidates) };
+            if (resolution.Status == "resolved") {
+                var parts = resolution.Candidates[0].Split(':');
+                var resolved = new Entity { Index = Int32.Parse(parts[0]), Version = Int32.Parse(parts[1]) };
+                if (JunctionLive(em, resolved, true) && em.HasComponent<Temp>(resolved) && em.HasComponent<Node>(resolved))
+                    result["connectedSnapshot"] = JunctionSnapshot(NativeBuild.Id(resolved), true);
+                else result["topologyResolution"]["status"] = "unavailable";
+            }
             return result;
         }
     }

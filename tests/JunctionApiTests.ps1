@@ -30,7 +30,7 @@ try {
     }
     $mod=$bridge.MainModule.Types | Where-Object FullName -eq 'CitiesIIAgentBridge.Mod'
     $methods=@($mod.Methods | Where-Object Name -Like 'Junction*')
-    if($methods.Count -ne 14){throw 'Expected snapshots and twelve local helpers'}
+    if($methods.Count -ne 15){throw 'Expected snapshots and thirteen local helpers'}
     $reads=@('Exists','HasComponent','HasBuffer','GetComponentData','GetBuffer','CreateEntityQuery')
     foreach($method in $methods) {
         foreach($instruction in $method.Body.Instructions) {
