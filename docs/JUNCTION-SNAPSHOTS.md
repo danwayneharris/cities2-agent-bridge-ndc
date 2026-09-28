@@ -84,3 +84,11 @@ cannot establish completed rebuilding; missing is not proof of disconnection.
 Do not use it to authorize Apply. The next live test is an endpoint-junction preview
 with the slider stationary, followed by repeated capture and eventual comparison
 to an authorized Apply on the toy save. Compilation/API checks passed; live pending.
+
+Preview responses also contain relatedPreviewEdges, discovered independently of the
+temporary node ConnectedEdge buffer. Candidates match an original incident edge or
+an endpoint equal to the original junction / a Temp node referring to it. The query
+bounds its scan to 4096 temporary edges, original incidents to 64, and SubLane
+references to 4096 per edge. It reports original/temporary endpoint identities,
+curves, composition inputs, Updated and SubLane identities. This is diagnostic
+adjacency evidence, not a completed lane snapshot or connectivity verdict.

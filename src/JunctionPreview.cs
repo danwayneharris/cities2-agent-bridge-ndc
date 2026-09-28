@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Game.Common;
 using Game.Net;
 using Game.Tools;
@@ -12,6 +12,56 @@ namespace CitiesIIAgentBridge {
             if (!em.HasComponent<Temp>(entity)) return JValue.CreateNull();
             var temp = em.GetComponentData<Temp>(entity);
             return new JObject { ["original"] = NativeBuild.Id(temp.m_Original), ["flags"] = temp.m_Flags.ToString() };
+        }
+        private JObject JunctionPreviewEdges(EntityManager em, Entity original) {
+            var rows = new JArray(); var errors = new JArray();
+            var originals = new System.Collections.Generic.HashSet<Entity>();
+            if (em.HasBuffer<ConnectedEdge>(original)) {
+                var incident = em.GetBuffer<ConnectedEdge>(original, true);
+                if (incident.Length > 64) errors.Add("incident_edge_limit_64");
+                for (int i = 0; i < incident.Length && i < 64; i++) originals.Add(incident[i].m_Edge);
+            } else errors.Add("missing_original_connected_edges");
+            using (var query = em.CreateEntityQuery(new EntityQueryDesc {
+                All = new[] { ComponentType.ReadOnly<Edge>(), ComponentType.ReadOnly<Temp>() },
+                None = new[] { ComponentType.ReadOnly<Deleted>() }
+            })) {
+                if (query.CalculateEntityCount() > 4096) {
+                    errors.Add("preview_edge_limit_4096");
+                } else using (var entities = query.ToEntityArray(Allocator.Temp)) {
+                    foreach (var entity in entities) {
+                        var temp = em.GetComponentData<Temp>(entity);
+                        var edge = em.GetComponentData<Edge>(entity);
+                        bool start = JunctionPreviewEndpointMatches(em, edge.m_Start, original);
+                        bool end = JunctionPreviewEndpointMatches(em, edge.m_End, original);
+                        if (!originals.Contains(temp.m_Original) && !start && !end) continue;
+                        var row = NativeBuild.Id(entity);
+                        row["temp"] = JunctionTemp(em, entity);
+                        row["startNode"] = JunctionEndpoint(em, edge.m_Start, true);
+                        row["endNode"] = JunctionEndpoint(em, edge.m_End, true);
+                        row["startTemp"] = JunctionLive(em, edge.m_Start, true) ? JunctionTemp(em, edge.m_Start) : JValue.CreateNull();
+                        row["endTemp"] = JunctionLive(em, edge.m_End, true) ? JunctionTemp(em, edge.m_End) : JValue.CreateNull();
+                        row["matchesOriginalEdge"] = originals.Contains(temp.m_Original);
+                        row["startMatchesJunction"] = start; row["endMatchesJunction"] = end;
+                        row["curve"] = JunctionCurve(em, entity);
+                        row["updated"] = em.HasComponent<Updated>(entity);
+                        JunctionInputs(em, entity, row, errors);
+                        var lanes = new JArray(); row["subLanes"] = lanes;
+                        if (!em.HasBuffer<SubLane>(entity)) errors.Add("missing_preview_sublanes:" + entity.Index);
+                        else {
+                            var buffer = em.GetBuffer<SubLane>(entity, true);
+                            if (buffer.Length > 4096) errors.Add("preview_sublane_limit_4096");
+                            for (int i = 0; i < buffer.Length && i < 4096; i++) lanes.Add(NativeBuild.Id(buffer[i].m_SubLane));
+                        }
+                        rows.Add(row);
+                    }
+                }
+            }
+            return new JObject { ["edges"] = rows, ["complete"] = errors.Count == 0, ["errors"] = errors };
+        }
+        private static bool JunctionPreviewEndpointMatches(EntityManager em, Entity endpoint, Entity original) {
+            if (endpoint == original) return true;
+            return JunctionLive(em, endpoint, true) && em.HasComponent<Temp>(endpoint)
+                && em.GetComponentData<Temp>(endpoint).m_Original == original;
         }
         private JObject JunctionPreview(JObject args) {
             var world = RequireCity();
@@ -41,6 +91,7 @@ namespace CitiesIIAgentBridge {
                 ["validationReady"] = false,
                 ["meaning"] = "Observation only: no tool revision association or completed-rebuild guarantee. Never use to authorize Apply." };
             if (matches.Count == 1) result["snapshot"] = JunctionSnapshot(NativeBuild.Id(candidate), true);
+            result["relatedPreviewEdges"] = JunctionPreviewEdges(em, original);
             return result;
         }
     }
