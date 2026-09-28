@@ -50,6 +50,7 @@ namespace CitiesIIAgentBridge
                 owners.Add(row);
                 row["live"] = JunctionLive(em, owner);
                 if (!JunctionLive(em, owner)) { errors.Add("unavailable_owner:" + owner.Index + ":" + owner.Version); continue; }
+                JunctionInputs(em, owner, row, errors);
                 row["updated"] = em.HasComponent<Updated>(owner);
                 row["created"] = em.HasComponent<Created>(owner);
                 if (em.HasComponent<Node>(owner)) row["position"] = Vector(em.GetComponentData<Node>(owner).m_Position);
@@ -83,6 +84,15 @@ namespace CitiesIIAgentBridge
                     { errors.Add("unavailable_lane:" + entity.Index); continue; }
                     laneRow["updated"] = em.HasComponent<Updated>(entity);
                     laneRow["created"] = em.HasComponent<Created>(entity);
+                    JunctionInputs(em, entity, laneRow, errors);
+                    laneRow["secondary"] = em.HasComponent<SecondaryLane>(entity);
+                    laneRow["master"] = em.HasComponent<MasterLane>(entity);
+                    laneRow["slave"] = em.HasComponent<SlaveLane>(entity);
+                    if (em.HasComponent<EdgeLane>(entity)) {
+                        var edgeLane = em.GetComponentData<EdgeLane>(entity);
+                        laneRow["edgeLane"] = new JObject { ["edgeDelta"] = new JArray(edgeLane.m_EdgeDelta.x, edgeLane.m_EdgeDelta.y),
+                            ["connectedStartCount"] = edgeLane.m_ConnectedStartCount, ["connectedEndCount"] = edgeLane.m_ConnectedEndCount };
+                    }
                     var lane = em.GetComponentData<Lane>(entity);
                     laneRow["start"] = JunctionPathNode(lane.m_StartNode, identities);
                     laneRow["middle"] = JunctionPathNode(lane.m_MiddleNode, identities);
@@ -93,6 +103,7 @@ namespace CitiesIIAgentBridge
                     if (em.HasComponent<TrackLane>(entity))
                     {
                         var track = em.GetComponentData<TrackLane>(entity);
+                        if (laneRow["prefab"]?["trackLaneData"] == null) errors.Add("missing_track_prefab_data:" + entity.Index);
                         laneRow["track"] = new JObject { ["flags"] = track.m_Flags.ToString(), ["speedLimit"] = track.m_SpeedLimit,
                             ["curviness"] = track.m_Curviness, ["accessRestriction"] = NativeBuild.Id(track.m_AccessRestriction) };
                     }
@@ -105,7 +116,7 @@ namespace CitiesIIAgentBridge
                 }
             }
             return new JObject {
-                ["schemaVersion"] = 1, ["snapshotId"] = Guid.NewGuid().ToString("N"), ["citySession"] = citySession,
+                ["schemaVersion"] = 2, ["snapshotId"] = Guid.NewGuid().ToString("N"), ["citySession"] = citySession,
                 ["capturedUtc"] = DateTime.UtcNow.ToString("O"), ["simulationFrame"] = simulation.frameIndex,
                 ["junction"] = NativeBuild.Id(node), ["incidentEdges"] = incident, ["owners"] = owners, ["lanes"] = lanes,
                 ["complete"] = errors.Count == 0, ["errors"] = errors,

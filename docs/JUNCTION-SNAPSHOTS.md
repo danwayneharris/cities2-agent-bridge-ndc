@@ -48,3 +48,25 @@ junction separately. No claim about the rail angle threshold has been establishe
 Reviewed game fingerprint:
 AAEE15C4FA41C130ABAA1183840667E4FAAE531D67E8A9FA7536618EFFA2F86A.
 This is a local development extension of 0.5.0, not the upstream release binary.
+## Schema 2: prefab and composition inputs
+
+Schema 2 adds each owner's/lane's PrefabRef identity. Referenced prefab information
+includes actual TrackLaneData.maxCurviness (already in native runtime units),
+trackTypes and fallback identity; NetLaneData flags; and network geometry flags,
+merge layers and width where present. This replaces guessing a prefab class default.
+
+Incident edges include EdgeGeometry.start/end left/right cubics in stored direction,
+plus edge/start-node/end-node composition identities, width, state and general/side
+flags. Edge composition lanes include buffer order, index, group, carriageway,
+position, flags and referenced lane prefab data. There is a 256-entry cap per
+composition lane buffer; hitting it marks complete=false.
+
+Generated lanes additionally report EdgeLane.edgeDelta, connected start/end counts,
+and SecondaryLane/MasterLane/SlaveLane presence. These distinguish the native
+existing-lane path from the composition-based reconstruction path. Snapshots remain
+observations after an edit, not recordings inside LaneSystem while it runs. They do
+not capture target sorting, anchor resolution, all middle/side connections, or the
+entire native pipeline. Do not claim full arbitrary-network replay from this schema.
+
+Verification: compiled against the installed assemblies; native component checks and
+compiled read-only checks pass. Schema-2 live capture is pending deployment/restart.

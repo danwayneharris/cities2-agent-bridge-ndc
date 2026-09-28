@@ -6,6 +6,12 @@ $game=[Colossal.Mono.Cecil.AssemblyDefinition]::ReadAssembly((Join-Path $GamePat
 $bridge=[Colossal.Mono.Cecil.AssemblyDefinition]::ReadAssembly((Resolve-Path $BridgeDll).Path)
 try {
     $contracts=@{
+        'Game.Prefabs.TrackLaneData'=@('m_MaxCurviness','m_TrackTypes','m_FallbackPrefab')
+        'Game.Prefabs.NetCompositionLane'=@('m_Lane','m_Position','m_Flags','m_Group','m_Index')
+        'Game.Prefabs.NetCompositionData'=@('m_Width','m_Flags','m_State')
+        'Game.Net.EdgeGeometry'=@('m_Start','m_End')
+        'Game.Net.EdgeLane'=@('m_EdgeDelta','m_ConnectedStartCount','m_ConnectedEndCount')
+        'Game.Net.Composition'=@('m_Edge','m_StartNode','m_EndNode')
         'Game.Net.Lane'=@('m_StartNode','m_MiddleNode','m_EndNode')
         'Game.Net.SubLane'=@('m_SubLane','m_PathMethods')
         'Game.Net.TrackLane'=@('m_Flags','m_SpeedLimit','m_Curviness','m_AccessRestriction')
@@ -23,7 +29,7 @@ try {
     }
     $mod=$bridge.MainModule.Types | Where-Object FullName -eq 'CitiesIIAgentBridge.Mod'
     $methods=@($mod.Methods | Where-Object Name -Like 'Junction*')
-    if($methods.Count -ne 5){throw 'Expected snapshot and four local helpers'}
+    if($methods.Count -ne 10){throw 'Expected snapshot and nine local helpers'}
     $reads=@('Exists','HasComponent','HasBuffer','GetComponentData','GetBuffer')
     foreach($method in $methods) {
         foreach($instruction in $method.Body.Instructions) {
