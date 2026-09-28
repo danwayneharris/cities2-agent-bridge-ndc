@@ -23,9 +23,8 @@ $saveIdentity = $null
 if ($SavePath) {
     $save = Get-Item -LiteralPath $SavePath
     if ($save.PSIsContainer -or $save.Extension -ne '.cok') { throw 'SavePath must be an existing .cok save file.' }
-    $cid = (Get-Content -LiteralPath ($save.FullName + '.cid') -Raw).Trim()
-    if ($cid -notmatch '^[0-9a-fA-F]{32}$') { throw 'Save identity must be a 32-digit hexadecimal asset ID.' }
-    $saveIdentity = $cid.ToLowerInvariant()
+    . (Join-Path $PSScriptRoot 'save-metadata-identity.ps1')
+    $saveIdentity = Get-SaveMetadataIdentity -SavePath $save.FullName
     $launchArguments = @("--startGame=$saveIdentity")
 }
 $running = @(Get-Process -Name Cities2 -ErrorAction SilentlyContinue)
