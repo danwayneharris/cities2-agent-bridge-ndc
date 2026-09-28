@@ -56,7 +56,7 @@ pwsh -NoProfile -File .\bridge.ps1 get_capabilities
 pwsh -NoProfile -File .\bridge.ps1 save_checkpoint -ArgsJson '{"label":"before-agent-session"}'
 ```
 
-Poll `get_operation` using the returned ID until `complete`; a queued save is not a verified save. Never reuse IDs from documentation or another city. Use COMMANDS.md to discover current entities, positions and unlocked prefabs.
+Poll `get_operation` using the returned ID until `complete`; a queued save is not a verified save. Never reuse IDs from documentation or another city. Use docs/COMMANDS.md to discover current entities, positions and unlocked prefabs.
 
 ## Stop, resume and remove
 

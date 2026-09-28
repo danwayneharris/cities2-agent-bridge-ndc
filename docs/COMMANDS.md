@@ -14,7 +14,7 @@ Known 0.5.0 issue: named district creation/editing can apply successfully and th
 | `set_service_districts` | Live building `index`/`version`; `districts` and `expectedDistricts` arrays of district identities. Default preview; `apply:true` changes assignments after control, stale-set and entity validation. Empty list restores citywide service. Returns before/requested/after and direct native-buffer readback status. Does not establish service reach. |
 
 
-Use `export-atlas.ps1 -Capture -OutputDirectory <new-directory>` for JSON/CSV/Markdown/SVG exports. See [atlas documentation](atlas/README.md).
+Use `export-atlas.ps1 -Capture -OutputDirectory <new-directory>` for JSON/CSV/Markdown/SVG exports. See [atlas documentation](../atlas/README.md).
 
 Coordinates are game-world metres. Obtain actual positions and IDs through inspection; do not reuse IDs across city sessions. Position objects use `x`, `z`, and optional `y` (terrain height is sampled when absent). Optional `index`/`version` attach a point to a node, edge, or zone block. Edge attachment also requires `curvePosition` between 0 and 1. Prefab arguments use `prefabIndex`/`prefabVersion` from `get_build_prefabs`.
 
