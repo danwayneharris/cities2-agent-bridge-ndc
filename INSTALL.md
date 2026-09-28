@@ -75,3 +75,43 @@ To uninstall, have the owner save and close the game. Remove only the installed 
 - Locked prefab/native placement error: inspect current unlocks and native preview results; don't override game state.
 - Installation blocked because Cities2 is running: ask the owner to save and close it.
 - Sharing diagnostics: review logs first. Do not upload city data or chat transcripts automatically.
+
+## Local Network Tools diagnostic branch
+
+Our local dan/junction-snapshot branch adds junction and preview queries not present
+in the upstream community release. Obtain this branch from the maintainer; publishing
+a separate fork is deferred. With a .NET SDK, build without installing:
+
+```powershell
+$game = [Environment]::GetEnvironmentVariable('CSII_INSTALLATIONPATH', 'User')
+.\build.ps1 -GamePath $game -OutputDirectory ./rebuilt -CommunityRelease
+.\tests\JunctionApiTests.ps1 -GamePath $game
+.\verify-api.ps1
+```
+
+For a local DLL installation, follow the explicit hash-checked backup/copy procedure
+in sibling [NetworkTools bootstrap](../CS2-NetworkTools/BOOTSTRAP.md#junction-development-dependencies)
+(path relative to repository root). Do not run the release installer against an
+unpackaged rebuilt DLL or change original package hashes. Close the game before
+copying, enable the local mod in the toy playset, load/pause manually, and leave
+controls off for get_junction_snapshot/get_junction_preview. File checks are not
+live-query validation. The game version and compiled API contracts must match.
+
+## Coding-agent plugin setup
+
+Our development workflow uses the skills-only cs2-modding plugin. It does not install
+the game, SDK, bridge, or debugger. It is optional for building/running the mod.
+Using a Codex CLI that supports plugin commands:
+
+```powershell
+codex plugin marketplace add CitiesSkylinesModding/agents-plugins
+codex plugin add cs2-modding@csmodding
+codex plugin list
+```
+
+Start a new agent session and confirm cs2-modding skills are available; there is no
+MCP server for this knowledge plugin. See the
+[marketplace installation guide](https://github.com/CitiesSkylinesModding/agents-plugins#install)
+and [official marketplace guidance](https://developers.openai.com/plugins/build/plugins).
+The separate unity-devtools and coherent-gameface plugins are not prerequisites
+for our mailbox diagnostic workflow. Plugin installation does not authorize game edits.
