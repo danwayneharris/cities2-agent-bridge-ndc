@@ -115,3 +115,35 @@ MCP server for this knowledge plugin. See the
 and [official marketplace guidance](https://developers.openai.com/plugins/build/plugins).
 The separate unity-devtools and coherent-gameface plugins are not prerequisites
 for our mailbox diagnostic workflow. Plugin installation does not authorize game edits.
+
+## Starting directly without the launcher (experimental local helper)
+
+The installed CS2 1.6.2f1 Launcher/launcher-settings.json specifies
+`../Cities2.exe` with an empty standard exeArgs array. `start-game.ps1` validates
+that configuration and can invoke that executable directly without editing Steam
+launch options, deleting launcher files, or changing saves/configuration:
+
+```powershell
+.\start-game.ps1                  # Inspect only
+.\start-game.ps1 -Launch -WhatIf  # Preview the action
+.\start-game.ps1 -Launch          # Start only if Cities2 is not running
+```
+
+Uses user CSII_INSTALLATIONPATH or explicit -GamePath. It refuses unfamiliar launcher
+configuration and duplicate game instances. No auto-continue/load flags are supplied.
+A started process is not proof that Steam services, mods, or the menu are ready.
+Direct launch has not yet been exercised: the existing game contains a city and
+bridge controls are off, so no verified checkpoint/shutdown was possible.
+
+The user's default is currently the reduced test playset. The helper does not
+select or modify playsets. No standard playset argument appears in the installed
+launcher configuration; this does not prove that direct startup preserves active
+mods. Verify the intended playset/mods after the first launch, before loading or
+saving a city. Steam may need to be running/authenticated; no Steam startup settings
+are changed by this helper. Do not forward launcher session tokens from an existing
+process. Plain Steam launch may still use its configured launcher entry.
+
+For a restart, first confirm the disposable city and enable bridge controls manually,
+request save_checkpoint and poll get_operation to successful completion. Record the
+checkpoint name. Prefer graceful shutdown; do not force-kill with an unverified save.
+Automatic load/restore and save-and-stop orchestration are not implemented here.
