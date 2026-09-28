@@ -147,3 +147,24 @@ For a restart, first confirm the disposable city and enable bridge controls manu
 request save_checkpoint and poll get_operation to successful completion. Record the
 checkpoint name. Prefer graceful shutdown; do not force-kill with an unverified save.
 Automatic load/restore and save-and-stop orchestration are not implemented here.
+
+### Explicit save loading at startup
+
+The installed Game.SceneFlow.GameManager.ParseOptions supports `startGame=` and
+AutoLoad resolves its Colossal.Hash128 through AssetDatabase.global, dispatching
+SaveGameData/SaveGameMetadata to Purpose.LoadGame. The helper accepts an explicit
+existing `.cok` file, validates its adjacent `.cok.cid` (32 hexadecimal digits), and
+passes only `--startGame=<id>`. It never picks a save by fuzzy name or loads by default:
+
+```powershell
+.\start-game.ps1 -SavePath 'C:\path\to\your test save.cok'          # Inspect
+.\start-game.ps1 -SavePath 'C:\path\to\your test save.cok' -Launch  # Explicit load
+```
+
+This extends the earlier no-auto-load helper: without SavePath it still starts at
+the menu. Source inspection establishes option support, not successful loading in
+this environment. Verify the active playset before using SavePath; loading can
+resume simulation according to game/save settings. No automatic pause is promised.
+The named test save was found uniquely and its identity validated read-only. No
+restart or load was executed during this investigation. The asset must be indexed
+by the game's asset database; existence of a file alone does not establish that.
