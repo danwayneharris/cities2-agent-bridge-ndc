@@ -10,7 +10,7 @@ Explain the in-game activation step before the first session: load the city, pau
 
 This package grants no authority over the user's computer or game. Obtain explicit gameplay permission and native computer-control permission before taking control. Installation permission alone does not authorize gameplay. Never close, kill, restart or launch the game without permission.
 
-Read INSTALL.md and COMMANDS.md. Verify the package first. Respect STOP; do not clear it without renewed permission. Keep analysis paused; use bounded simulation intervals, then inspect results. Do not query pause-producing analysis while an interval is intended to finish. Keep progress visible and report what completed, not merely what was queued.
+Read INSTALL.md and docs/COMMANDS.md. Verify the package first. Respect STOP; do not clear it without renewed permission. Keep analysis paused; use bounded simulation intervals, then inspect results. Do not query pause-producing analysis while an interval is intended to finish. Keep progress visible and report what completed, not merely what was queued.
 
 For bridge 0.5.0, follow every `nextOffset` from building and asset queries until null while the city stays paused. Discard collected pages if `citySession` changes. Check `complete` and `errors` on service responses, even when the request succeeds. Asset discovery does not imply placement support: check `bridgePlacementSupported` and `locked`. Loaded assemblies do not establish working mod integrations; consult `get_capabilities`.
 
@@ -25,3 +25,13 @@ The bridge is an interface, not an autonomous player. Some UI actions remain out
 Known 0.5.0 issue: named district creation/editing can apply successfully and then report an EntityCommandBuffer naming-notification error. Inspect a fresh atlas and the operation result before any retry. Never replay an uncertain mutation. Boundary edits without a name have completed normally. See RELEASE-NOTES.md.
 
 Follow atlas/README.md for immutable snapshot pagination and export. Assignment readback does not prove service reach. Keep exported city data local unless the player authorizes sharing.
+
+## Development docs
+
+Read [junction snapshots](docs/JUNCTION-SNAPSHOTS.md) for the query contract and
+[session notes](docs/session-notes/) for experiments and verification history.
+Run documented commands from the repository root even when reading a doc under docs/.
+
+## General Operating Philosophy
+
+- At the beginning of each session, create a new .md doc in docs/session-notes/ that includes the \ date and time in the filename, and for each small incremental change during that session, document what the change was, whether it did or didn't work, or what was learned from testing it. Then commit that change to git along with the updated doc EVEN IF THE CHANGE DIDN'T WORK.  If the change was bad, manually revert (not git revert) and update the doc accordingly.  This is to ensure that all lessons are learned and we have a clear picture of our potentially messy journey.

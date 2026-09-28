@@ -146,7 +146,7 @@ namespace CitiesIIAgentBridge
         private JObject Dispatch(string command, JObject args)
         {
             // These status polls must not terminate an active bounded simulation step.
-            bool statusOnly = command == "ping" || command == "get_capabilities" || command == "get_operation" || command == "get_batch" || command == "get_simulation_step";
+            bool statusOnly = command == "get_junction_snapshot" || command == "get_junction_preview" || command == "ping" || command == "get_capabilities" || command == "get_operation" || command == "get_batch" || command == "get_simulation_step";
             if(!statusOnly && command != "simulate_step" && command != "cancel_simulation_step" && command != "set_simulation_speed" && command != "set_camera")
             {
                 if(settings.AllowControl) PauseAnalysis();
@@ -162,7 +162,7 @@ namespace CitiesIIAgentBridge
                 {
                     ["read"] = new JArray("ping", "get_capabilities", "get_city_state", "get_camera", "get_selected", "inspect_entity", "get_water_facilities"),
                     ["control"] = new JArray("create_district","edit_district","set_service_districts","set_camera", "set_simulation_speed", "build_road", "build_network", "upgrade_network", "zone_rectangle", "clear_zoning", "place_building", "relocate_building", "demolish", "purchase_tiles", "set_tax", "set_service_budget", "save_checkpoint", "batch_execute"),
-                    ["constructionQueries"] = new JArray("get_build_prefabs", "get_prefab_details", "get_network", "get_network_edges", "trace_network", "get_zone_cells", "get_operation", "get_batch", "get_city_management", "get_services", "sample_terrain", "get_tiles", "get_buildings", "diagnose_connections"),
+                    ["constructionQueries"] = new JArray("get_build_prefabs", "get_prefab_details", "get_network", "get_network_edges", "get_junction_snapshot", "get_junction_preview", "trace_network", "get_zone_cells", "get_operation", "get_batch", "get_city_management", "get_services", "sample_terrain", "get_tiles", "get_buildings", "diagnose_connections"),
                     ["buildVersion"] = ModVersion, ["liveValidation"] = "community_binary_requires_live_validation",
                     ["visibility"] = new JObject {
                         ["districtAtlas"] = true, ["districtServiceAssignments"] = true,
@@ -219,6 +219,7 @@ namespace CitiesIIAgentBridge
                 case "get_build_prefabs": return BuildPrefabs(args);
                 case "get_prefab_details": return PrefabDetails(args);
                 case "get_network": return Network(args);
+                case "get_junction_snapshot": return JunctionSnapshot(args); case "get_junction_preview": return JunctionPreview(args);
                 case "get_network_edges": return NetworkEdges(args);
                 case "trace_network": return NetworkPath(args);
                 case "upgrade_network": return UpgradeNetwork(args);

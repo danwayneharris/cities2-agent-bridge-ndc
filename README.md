@@ -63,7 +63,7 @@ The game option resets off when a city loads. Enable it inside the loaded city, 
 
 - INSTALL.md: agent-readable installation and first-connection workflow.
 - AGENTS.md: gameplay and consent rules for agents reading this directory.
-- COMMANDS.md / commands.json: commands, arguments and limitations.
+- docs/COMMANDS.md / commands.json: commands, arguments and limitations.
 - install.ps1 / verify-package.ps1: compatibility, file integrity and installation.
 - bridge.ps1 / advance.ps1: mailbox client and bounded simulation helper.
 - journal.ps1: optional local visible-progress journal; transcript import is optional and Codex-format-specific.
@@ -77,3 +77,12 @@ Keep the ZIP intact when sharing. Compare its SHA-256 against the checksum suppl
 District census and map exports, district drawing/reshaping, service-district assignments, and improved water/resource/groundwater sampling. See [atlas usage](atlas/README.md) and [release notes](RELEASE-NOTES.md). Node.js is required for the atlas exporter.
 
 Known 0.5.0 issue: named district creation/editing can apply successfully and then report an EntityCommandBuffer naming-notification error. Inspect a fresh atlas and the operation result before any retry. Never replay an uncertain mutation. Boundary edits without a name have completed normally. See RELEASE-NOTES.md.
+
+## Development documentation
+
+- [Command reference](docs/COMMANDS.md)
+- [Junction snapshot contract](docs/JUNCTION-SNAPSHOTS.md)
+- [Session notes](docs/session-notes/) — incremental changes, verification and failed experiments.
+
+The junction extension is local development work. A Dan-owned GitHub fork and push
+are deferred; no upstream PR or public release is implied.
