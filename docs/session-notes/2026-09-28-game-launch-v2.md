@@ -38,3 +38,16 @@ interaction. Save/exit/repeat and mod-control remain unverified. Controls are st
 disabled, so no checkpoint or mod mutation attempted. The temporary app-ID hint
 is left in its unique working directory for inspection; no persistent Steam
 launch options, game installation, or saved city files were edited.
+
+## Visible-window retry
+
+User reported the first run had no visible window. Enumerating CS2's UnityWndClass
+found it hidden; restoring it made it visible, but the user subsequently reported
+it hung and closed it. Earlier bridge evidence established loading and paused state,
+not interactive responsiveness. The cause of the hang is not established.
+
+At the user's explicit request, changed the experimental launcher's WindowStyle
+from Hidden to Normal and retried the same metadata ID in a new isolated app-ID
+working directory. Process28332 started. This supersedes the hidden-window launch
+choice for this user-facing experiment. Responsiveness and load success still
+require observation; do not describe this retry as a proven hang fix.

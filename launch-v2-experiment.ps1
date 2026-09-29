@@ -1,4 +1,4 @@
-﻿[CmdletBinding(SupportsShouldProcess)]
+[CmdletBinding(SupportsShouldProcess)]
 param(
     [Parameter(Mandatory)][string]$SavePath,
     [string]$GamePath=[Environment]::GetEnvironmentVariable('CSII_INSTALLATIONPATH','User'),
@@ -18,6 +18,6 @@ if($PSCmdlet.ShouldProcess($exe,'Experimental Steam app-ID-hint launch of saved 
     $working=Join-Path $env:TEMP ('cs2-launch-v2-'+[Guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory $working | Out-Null
     [IO.File]::WriteAllText((Join-Path $working 'steam_appid.txt'),'949230',[Text.Encoding]::ASCII)
-    $p=Start-Process -FilePath $exe -WorkingDirectory $working -ArgumentList $arguments -WindowStyle Hidden -PassThru
+    $p=Start-Process -FilePath $exe -WorkingDirectory $working -ArgumentList $arguments -WindowStyle Normal -PassThru
     [pscustomobject]@{ProcessId=$p.Id;WorkingDirectory=$working;Status='Started; loading, pause and mod readiness require independent verification'}
 }
