@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Colossal.Logging;
+using Colossal.IO.AssetDatabase;
 using Colossal.Serialization.Entities;
 using Game;
 using Game.City;
@@ -38,8 +39,12 @@ namespace CitiesIIAgentBridge
             // IMod instances may be allocated without running constructors/field initializers.
             log = LogManager.GetLogger("CitiesIIAgentBridge").SetShowsErrorsInUI(false);
             citySession = Guid.NewGuid().ToString("N");
+            var defaults = new BridgeSettings(this);
             settings = new BridgeSettings(this);
             settings.RegisterInOptionsUI();
+            AssetDatabase.global.LoadSettings("CitiesIIAgentBridge", settings, defaults);
+            log.Info($"Control restoration: allow={settings.AllowControl} remember={settings.RememberControl}");
+            if (!settings.RememberControl) settings.AllowControl = false;
             GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(settings));
             string root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CitiesIIAgentBridge");
             mailbox = new Mailbox(root, Dispatch, () => citySession);
@@ -65,8 +70,9 @@ namespace CitiesIIAgentBridge
             tileOperation = null; pendingTiles = null;
             if (batch != null && (string)batch["status"] == "running") { batch["status"] = "interrupted"; batch["error"] = "city_changed"; }
             citySession = Guid.NewGuid().ToString("N");
-            // Changing saves invalidates pending control permission as well as entity IDs.
-            settings.AllowControl = false;
+            // Entity IDs and pending operations always reset; permission persists only by opt-in.
+            log.Info($"Control restoration: allow={settings.AllowControl} remember={settings.RememberControl}");
+            if (!settings.RememberControl) settings.AllowControl = false;
         }
 
         public void OnDispose()
@@ -92,7 +98,7 @@ namespace CitiesIIAgentBridge
             try
             {
                 bool communicated = BridgeTick.Run(
-                    () => { if (File.Exists(Path.Combine(mailbox.Root, "STOP"))) settings.AllowControl = false; },
+                    () => { if (File.Exists(Path.Combine(mailbox.Root, "STOP"))) RevokeControl(); },
                     SimulationTick,
                     () => mailbox.Publish(new JObject
                 {
@@ -100,7 +106,7 @@ namespace CitiesIIAgentBridge
                     ["gameVersion"] = Application.version,
                     ["gameMode"] = GameManager.instance.gameMode.ToString(),
                     ["loading"] = GameManager.instance.isGameLoading,
-                    ["controlEnabled"] = settings.AllowControl,
+                    ["controlEnabled"] = settings.AllowControl, ["rememberControl"] = settings.RememberControl,
                     ["pid"] = System.Diagnostics.Process.GetCurrentProcess().Id
                 }),
                     () => mailbox.Pump(), WorkflowTick, MailboxContention);
@@ -113,12 +119,19 @@ namespace CitiesIIAgentBridge
             }
             catch (Exception e)
             {
-                settings.AllowControl = false;
+                RevokeControl();
                 FinishSimulation("bridge_fault");
                 if (!faulted) log.Error(e);
                 faulted = true;
             }
             return false;
+        }
+
+        private void RevokeControl()
+        {
+            if (!settings.AllowControl) return;
+            settings.AllowControl = false;
+            settings.ApplyAndSave();
         }
 
         private void MailboxContention(IOException error)
@@ -146,7 +159,7 @@ namespace CitiesIIAgentBridge
         private JObject Dispatch(string command, JObject args)
         {
             // These status polls must not terminate an active bounded simulation step.
-            bool statusOnly = command == "get_junction_snapshot" || command == "get_junction_preview" || command == "ping" || command == "get_capabilities" || command == "get_operation" || command == "get_batch" || command == "get_simulation_step";
+            bool statusOnly = command.StartsWith("nt_", StringComparison.Ordinal) || command == "get_junction_snapshot" || command == "get_junction_preview" || command == "ping" || command == "get_capabilities" || command == "get_operation" || command == "get_batch" || command == "get_simulation_step";
             if(!statusOnly && command != "simulate_step" && command != "cancel_simulation_step" && command != "set_simulation_speed" && command != "set_camera")
             {
                 if(settings.AllowControl) PauseAnalysis();
@@ -157,11 +170,17 @@ namespace CitiesIIAgentBridge
                 throw new InvalidOperationException("batch_in_progress_wait_or_cancel_batch");
             switch (command)
             {
+                case "nt_get_state": return NetworkToolsCommand("state", args);
+                case "nt_activate": return NetworkToolsCommand("activate", args);
+                case "nt_select": return NetworkToolsCommand("select", args);
+                case "nt_strength": return NetworkToolsCommand("strength", args);
+                case "nt_clear": return NetworkToolsCommand("clear", args);
+                case "nt_apply": return NetworkToolsCommand("apply", args);
                 case "ping": return new JObject { ["pong"] = true, ["modVersion"] = ModVersion };
                 case "get_capabilities": return new JObject
                 {
-                    ["read"] = new JArray("ping", "get_capabilities", "get_city_state", "get_camera", "get_selected", "inspect_entity", "get_water_facilities"),
-                    ["control"] = new JArray("create_district","edit_district","set_service_districts","set_camera", "set_simulation_speed", "build_road", "build_network", "upgrade_network", "zone_rectangle", "clear_zoning", "place_building", "relocate_building", "demolish", "purchase_tiles", "set_tax", "set_service_budget", "save_checkpoint", "batch_execute"),
+                    ["read"] = new JArray("nt_get_state", "ping", "get_capabilities", "get_city_state", "get_camera", "get_selected", "inspect_entity", "get_water_facilities"),
+                    ["control"] = new JArray("nt_activate","nt_select","nt_strength","nt_clear","nt_apply","create_district","edit_district","set_service_districts","set_camera", "set_simulation_speed", "build_road", "build_network", "upgrade_network", "zone_rectangle", "clear_zoning", "place_building", "relocate_building", "demolish", "purchase_tiles", "set_tax", "set_service_budget", "save_checkpoint", "batch_execute"),
                     ["constructionQueries"] = new JArray("get_build_prefabs", "get_prefab_details", "get_network", "get_network_edges", "get_junction_snapshot", "get_junction_preview", "trace_network", "get_zone_cells", "get_operation", "get_batch", "get_city_management", "get_services", "sample_terrain", "get_tiles", "get_buildings", "diagnose_connections"),
                     ["buildVersion"] = ModVersion, ["liveValidation"] = "community_binary_requires_live_validation",
                     ["visibility"] = new JObject {
@@ -281,7 +300,7 @@ namespace CitiesIIAgentBridge
                 ["selectedSpeed"] = simulation?.selectedSpeed,
                 ["date"] = time?.GetCurrentDateTime().ToString("O"),
                 ["dateMeaning"] = "Raw simulation DateTime; displayed game calendar may differ",
-                ["controlEnabled"] = settings.AllowControl, ["citySession"] = citySession
+                ["controlEnabled"] = settings.AllowControl, ["rememberControl"] = settings.RememberControl, ["citySession"] = citySession
             };
             if (em.HasComponent<Population>(city.City))
             {

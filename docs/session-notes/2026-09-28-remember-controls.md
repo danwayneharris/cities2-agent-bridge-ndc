@@ -1,0 +1,51 @@
+﻿# Remembered controls implementation and deployment
+
+Added RememberControl, default false, and FileLocation/AssetDatabase.LoadSettings
+using the game's standard mod settings persistence. Retain AllowControl at preload
+only when opted in. STOP and fault paths call RevokeControl, which sets Allow false
+and invokes ApplyAndSave only on transition. Existing STOP file gates remain.
+No settings are automatically enabled by installation. Both checkboxes must be
+selected by the user. Changes apply globally across cities by explicit opt-in.
+
+Source grounding: Game.Settings.Setting.ApplyAndSave invokes Apply and saves the
+specific registered setting. NetworkTools' existing LucaModBase uses the same
+LoadSettings pattern. No pinned shared code modified.
+
+Build passed (two existing obsolete-updater warnings); native API/catalog checks
+passed. Test harness targets net10 while installed SDK is net8: direct attempts
+failed. Isolated net8 harness initially had a bad reference, corrected; recovery
+suite reached 23 passing checks before client tests failed due to missing pwsh.
+Full regression suite is NOT claimed passed. Native settings disk round-trip,
+remember-on/off restart behavior and STOP persistence still need live validation.
+
+User closed game; compiled DLL and installed Game.dll matched build manifest.
+Previous installed DLL/PDB backed up, new DLL/PDB copied and DLL hash verified.
+Game was not launched. Next: enable both options in UI, close/relaunch, inspect
+controlEnabled, then validate turning Allow off and STOP behavior separately.
+
+## First restart test failed
+
+User enabled both boxes and authorized graceful close/relaunch. Live capabilities
+reported controls true before closing. CloseMainWindow succeeded and process exited
+within20 seconds. Visible launch-v2 reopened exact toy save as process28308.
+After loading=false/gameMode=Game, heartbeat reports controlEnabled=false.
+Read-only inspection of user-data CitiesIIAgentBridge.coc shows BOTH AllowControl
+and RememberControl true. Therefore saving worked; restoration/runtime handling
+failed. Cause not yet isolated. Do not claim persistence validated or ask user to
+repeat toggling as a substitute for fixing load behavior. Game left running.
+
+## Restoration retry succeeds
+
+User manually closed game and reconfirmed save name. STOP absent; both persisted
+booleans remained true. Inspected native ModSetting constructor: it assigns each
+new instance to a static registration dictionary. Previously constructing the
+fallback defaults after the live settings overwrote that registration. Changed
+construction order: defaults first, live settings last. Added OnLoad/OnPreload
+value logs and rememberControl in heartbeat/capability/status responses.
+
+Build passed with existing two warnings, deployed with game closed, launched same
+save visibly. Process48536 startup AND preload logs report allow=True remember=True.
+After loading=false/gameMode=Game, heartbeat reports controlEnabled=true and
+rememberControl=true, with no user checkbox interaction. This is one successful
+restore following the correction, not exhaustive proof of every lifecycle path.
+STOP persistence, remember-off, manual-off restart still need live tests.
