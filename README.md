@@ -95,3 +95,13 @@ loss. A saved rail case showed four permanent connections versus three in the ol
 preview; NetworkTools' corrected preview and subsequent Apply both retained four.
 See docs/JUNCTION-SNAPSHOTS.md for scope and docs/session-notes/2026-09-28-pr-reconciliation.md.
 This does not establish generic mod control or autonomous launch/load/save support.
+
+## Optional remembered control permission (local development build)
+
+Options > Cities II Agent Bridge now includes **Remember local bridge controls
+between loads and restarts**, default off. Enable both that option and **Allow
+local bridge controls** to retain permission in every subsequently loaded city.
+With Remember off, the historical reset-on-load behavior above still applies.
+Turning Allow off persists too. STOP and bridge faults revoke permission and save
+it off; removing STOP alone does not re-enable control. Native settings persistence
+is compiled/deployed but needs an in-game restart verification.
