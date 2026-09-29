@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '../save-metadata-identity.ps1')
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 Add-Type -AssemblyName System.IO.Compression
@@ -29,4 +29,3 @@ foreach($path in $invalid){
     if(-not $rejected){throw "Accepted invalid fixture $path"}
 }
 Write-Output 'PASS: valid metadata identity; missing, ambiguous, malformed and oversized identities rejected.'
-
