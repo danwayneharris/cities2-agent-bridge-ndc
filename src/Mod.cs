@@ -39,9 +39,11 @@ namespace CitiesIIAgentBridge
             // IMod instances may be allocated without running constructors/field initializers.
             log = LogManager.GetLogger("CitiesIIAgentBridge").SetShowsErrorsInUI(false);
             citySession = Guid.NewGuid().ToString("N");
+            var defaults = new BridgeSettings(this);
             settings = new BridgeSettings(this);
             settings.RegisterInOptionsUI();
-            AssetDatabase.global.LoadSettings("CitiesIIAgentBridge", settings, new BridgeSettings(this));
+            AssetDatabase.global.LoadSettings("CitiesIIAgentBridge", settings, defaults);
+            log.Info($"Control restoration: allow={settings.AllowControl} remember={settings.RememberControl}");
             if (!settings.RememberControl) settings.AllowControl = false;
             GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(settings));
             string root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CitiesIIAgentBridge");
@@ -69,6 +71,7 @@ namespace CitiesIIAgentBridge
             if (batch != null && (string)batch["status"] == "running") { batch["status"] = "interrupted"; batch["error"] = "city_changed"; }
             citySession = Guid.NewGuid().ToString("N");
             // Entity IDs and pending operations always reset; permission persists only by opt-in.
+            log.Info($"Control restoration: allow={settings.AllowControl} remember={settings.RememberControl}");
             if (!settings.RememberControl) settings.AllowControl = false;
         }
 
@@ -103,7 +106,7 @@ namespace CitiesIIAgentBridge
                     ["gameVersion"] = Application.version,
                     ["gameMode"] = GameManager.instance.gameMode.ToString(),
                     ["loading"] = GameManager.instance.isGameLoading,
-                    ["controlEnabled"] = settings.AllowControl,
+                    ["controlEnabled"] = settings.AllowControl, ["rememberControl"] = settings.RememberControl,
                     ["pid"] = System.Diagnostics.Process.GetCurrentProcess().Id
                 }),
                     () => mailbox.Pump(), WorkflowTick, MailboxContention);
@@ -291,7 +294,7 @@ namespace CitiesIIAgentBridge
                 ["selectedSpeed"] = simulation?.selectedSpeed,
                 ["date"] = time?.GetCurrentDateTime().ToString("O"),
                 ["dateMeaning"] = "Raw simulation DateTime; displayed game calendar may differ",
-                ["controlEnabled"] = settings.AllowControl, ["citySession"] = citySession
+                ["controlEnabled"] = settings.AllowControl, ["rememberControl"] = settings.RememberControl, ["citySession"] = citySession
             };
             if (em.HasComponent<Population>(city.City))
             {

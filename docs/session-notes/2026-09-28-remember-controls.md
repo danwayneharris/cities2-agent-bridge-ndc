@@ -33,3 +33,19 @@ Read-only inspection of user-data CitiesIIAgentBridge.coc shows BOTH AllowContro
 and RememberControl true. Therefore saving worked; restoration/runtime handling
 failed. Cause not yet isolated. Do not claim persistence validated or ask user to
 repeat toggling as a substitute for fixing load behavior. Game left running.
+
+## Restoration retry succeeds
+
+User manually closed game and reconfirmed save name. STOP absent; both persisted
+booleans remained true. Inspected native ModSetting constructor: it assigns each
+new instance to a static registration dictionary. Previously constructing the
+fallback defaults after the live settings overwrote that registration. Changed
+construction order: defaults first, live settings last. Added OnLoad/OnPreload
+value logs and rememberControl in heartbeat/capability/status responses.
+
+Build passed with existing two warnings, deployed with game closed, launched same
+save visibly. Process48536 startup AND preload logs report allow=True remember=True.
+After loading=false/gameMode=Game, heartbeat reports controlEnabled=true and
+rememberControl=true, with no user checkbox interaction. This is one successful
+restore following the correction, not exhaustive proof of every lifecycle path.
+STOP persistence, remember-off, manual-off restart still need live tests.
