@@ -142,3 +142,18 @@ Offline checks cannot validate the live overlay correspondence or water appearan
 `get_junction_preview`: permanent node index/version; manually paused read-only
 observation of matching temporary junctions. Not an Apply validation verdict.
 See [preview contract](JUNCTION-SNAPSHOTS.md#preview-observations).
+
+## NetworkTools development adapter (Debug builds only)
+
+These commands require a loaded, paused city and the matching local NetworkTools Debug build. Mutations require enabled bridge controls and respect STOP. They do not enable a disabled mod in the playset; `nt_activate` activates its Smooth Curve tool.
+
+| Command | Arguments and result |
+|---|---|
+| `nt_get_state` | Read tool session, revision, submission, phase, endpoints, strength and previewReady. |
+| `nt_activate` | Activate Smooth Curve. Poll state before selecting. |
+| `nt_clear` | Current `session`, `revision`; clear selection. |
+| `nt_select` | Current `session`, `revision`, `start` and `end` objects with live `index`/`version`. Requires Idle; uses existing path selection, maximum 128 nodes. |
+| `nt_strength` | Current `session`, `revision`, numeric `value` in [0,1]. |
+| `nt_apply` | Current `session`, `revision`, `submission`. Requires verified current preview. Acceptance is NOT completion; independently inspect permanent geometry afterward. |
+
+Read state after each operation. Never reuse entity identities across city loads. Clear explicitly before replacing an existing selection. Poll previewReady before Apply. Missing Debug adapter is an explicit error; advertised commands alone do not prove an installed adapter.
