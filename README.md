@@ -86,3 +86,12 @@ Known 0.5.0 issue: named district creation/editing can apply successfully and th
 
 The junction extension is local development work. A Dan-owned GitHub fork and push
 are deferred; no upstream PR or public release is implied.
+## Fork development checkpoint — September 28, 2026
+
+This fork's connected-preview resolver has now been exercised live with NetworkTools.
+It resolves the replacement junction through shared endpoints of uniquely mapped
+incident edges. Captures distinguish missing and ambiguous results from connectivity
+loss. A saved rail case showed four permanent connections versus three in the old
+preview; NetworkTools' corrected preview and subsequent Apply both retained four.
+See docs/JUNCTION-SNAPSHOTS.md for scope and docs/session-notes/2026-09-28-pr-reconciliation.md.
+This does not establish generic mod control or autonomous launch/load/save support.

@@ -108,3 +108,14 @@ This compiles and exercises the same pure C# resolver used in-game. The connecte
 snapshot path compiles but needs live verification after deployment. Collection
 success still does not mean current tool revision or completed reconstruction;
 validationReady remains false.
+
+## Current live evidence (September 28)
+
+The earlier pending-verification statements above describe historical implementation
+stages. Connected replacement resolution is now live-verified with the NetworkTools
+saved rail regression. Both complete permanent and connected-preview snapshots
+correctly exposed a four-to-three directed connection loss. A later corrected
+preview and Apply each retained all four. Collection and resolver evidence does
+not establish tool freshness or authorize Apply: validationReady remains false.
+Captures are retained in the NetworkTools repository under
+NetworkTools.docs/session-notes/captures/comparison-save-20260928.
