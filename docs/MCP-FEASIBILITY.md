@@ -1,4 +1,4 @@
-﻿# MCP for Cities II Agent Bridge: feasibility and value
+# MCP for Cities II Agent Bridge: feasibility and value
 
 Research date: 2026-09-29. Baseline checkout observed: `f0d6882`. This is a read-only investigation with documentation output. No bridge requests, live queries, game actions, code edits, configuration changes, installations or builds were performed.
 
@@ -207,6 +207,36 @@ Use the SDK's protocol implementation; own the bridge-domain mapping. Keep any H
 The current idle request scheduling delay is up to roughly one 250 ms tick, plus client response polling up to roughly 100 ms, filesystem work, game stalls and command time. These are code-derived scheduling components, not measured latency percentiles or hard upper bounds. Four requests per tick yields a nominal ceiling around 16 dispatched requests/second for cheap work under ideal conditions; expensive queries and enumeration/order effects reduce that.
 
 A persistent external adapter avoids launching PowerShell for each call if it speaks mailbox protocol directly, and can centralize polling. It does not remove the mod tick or accelerate geometry jobs. An embedded/per-frame server might reduce interactive latency, but model turn time and game work may dominate anyway. The bridge is a control interface, not a suitable per-frame high-rate data stream.
+
+### Working hypothesis: round trips dominate perceived slowness
+
+**Hypothesis, not a benchmark result:** much of the perceived control latency comes from repeated agent/tool round trips and conservative polling, rather than the cost of reading and writing small JSON files. Agent inference, tool scheduling, subprocess startup, game execution and observation all contribute; the current evidence does not establish which dominates.
+
+A typical sequence might set strength, read state, inspect preview, check again, request Apply and verify the result. If each transition returns to the model for interpretation and another tool call, the workflow repeatedly pays host/tool and model latency even when the underlying game action is cheap. Time spent waiting for tools should not be mistaken for time spent on complex model computation.
+
+| Stage | Evidence or uncertainty |
+| --- | --- |
+| Agent selects the next action and processes results | Unmeasured model/host latency; may recur between every command |
+| Tool dispatch and PowerShell startup | Unmeasured; a fresh process adds overhead when launched per call |
+| Mod notices a request | Nominal 250 ms polling interval, subject to game scheduling |
+| Client notices a response | Nominal 100 ms polling interval |
+| Game operation completes | Variable: queries, preview jobs, command-buffer playback, rebuilding or saving |
+| Follow-up verification | Additional polling and possibly additional agent turns |
+
+With uniformly distributed arrival phases, half of each polling interval gives an illustrative average scheduling component of `250/2 + 100/2 = 175 ms` per exchange. This is an idealized estimate, not a measured mean: polling phases can correlate, and stalls, queueing, file contention, command execution and process startup are excluded. It is neither an end-to-end latency estimate nor an upper bound.
+
+A persistent MCP adapter could eliminate per-call PowerShell startup and perform bounded status polling without returning to the model on every poll. Higher-level operations could carry out an already-authorized sequence and return at meaningful checkpoints. Those orchestration changes may provide more benefit than replacing the file transport. MCP over the unchanged mailbox still retains the mod's 250 ms cadence; changing protocol alone does not remove model deliberation or speed up game jobs.
+
+### Measurement plan to distinguish causes
+
+No measurements below were run for this report. Live control comparisons require a separately authorized disposable-city session.
+
+1. **Transport baseline:** time repeated sequential ping requests from a scripted client, separating cold process startup from a persistent client. Record request publication and response observation; add mod receipt/dispatch timestamps in a later instrumented experiment if needed to separate transport from handler time. A single timing around bridge.ps1 alone combines several stages.
+2. **Operation baseline:** measure command acceptance to actual preview/Apply completion, preserving operation IDs and revisions. Do not treat a returned request acknowledgement as completed geometry work.
+3. **Orchestration comparison:** execute the same bounded sequence with the same initial state, checks and completion criteria through a script and through an agent. Record total time, command count, polling count and time between response receipt and the next request. Do not make the script appear faster by omitting verification.
+4. **Report the distribution:** repeat runs and report median/p95, distinguishing game work from transport and agent/host overhead. Compare equivalent warmed-up conditions and identify stalls separately.
+
+Interpretation: if the script completes in two seconds and the agent takes twenty, prioritize orchestration and fewer model-mediated transitions. If both take twenty, investigate game work and bridge scheduling. If even ping is slow, isolate process startup, host dispatch and transport first. These numbers illustrate a decision rule; they are not observed results.
 
 Suggested measurements before optimizing transport:
 
