@@ -17,3 +17,24 @@ game for the launch test. Then test correct metadata-ID delivery under Steam.
 Save completion needs package verification; the new investigation found native
 Save() return value alone is insufficient. Mod-control still needs a typed,
 revision-aware update-thread adapter. Offline helper success is not live autonomy.
+
+## First successful launch/load trial (19:26 PDT)
+
+User closed the game and authorized the test. Added launch-v2-experiment.ps1:
+explicit -Launch opt-in, refuse running game, require Steam process and existing
+save, derive metadata ID, create an isolated temporary working directory containing
+steam_appid.txt (949230), launch Cities2.exe hidden with --noSplash and --startGame.
+No Steam settings or installation files changed; no helper launch guard removed.
+
+Process22132 survived startup. New bridge session82107e1e6c4646088a0c6cd8940adcb7
+reported loading=false/gameMode=Game. Native log explicitly reports starting from
+bridge test - rail smoothing breaks merge junction, metadata ID
+077cc7bce1b5119320c289201eb525ab. Read-only city query reports Wantagh,
+population0, selectedSpeed0, controls disabled. Test mod initialization includes
+NetworkTools, bridge, Anarchy, FindIt, MoveIt and UnifiedIconLibrary.
+
+This verifies one launch -> exact saved city -> paused trial without launcher
+interaction. Save/exit/repeat and mod-control remain unverified. Controls are still
+disabled, so no checkpoint or mod mutation attempted. The temporary app-ID hint
+is left in its unique working directory for inspection; no persistent Steam
+launch options, game installation, or saved city files were edited.
