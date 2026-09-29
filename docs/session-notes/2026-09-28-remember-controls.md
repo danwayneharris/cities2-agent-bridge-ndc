@@ -22,3 +22,14 @@ User closed game; compiled DLL and installed Game.dll matched build manifest.
 Previous installed DLL/PDB backed up, new DLL/PDB copied and DLL hash verified.
 Game was not launched. Next: enable both options in UI, close/relaunch, inspect
 controlEnabled, then validate turning Allow off and STOP behavior separately.
+
+## First restart test failed
+
+User enabled both boxes and authorized graceful close/relaunch. Live capabilities
+reported controls true before closing. CloseMainWindow succeeded and process exited
+within20 seconds. Visible launch-v2 reopened exact toy save as process28308.
+After loading=false/gameMode=Game, heartbeat reports controlEnabled=false.
+Read-only inspection of user-data CitiesIIAgentBridge.coc shows BOTH AllowControl
+and RememberControl true. Therefore saving worked; restoration/runtime handling
+failed. Cause not yet isolated. Do not claim persistence validated or ask user to
+repeat toggling as a substitute for fixing load behavior. Game left running.
