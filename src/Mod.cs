@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Colossal.Logging;
+using Colossal.IO.AssetDatabase;
 using Colossal.Serialization.Entities;
 using Game;
 using Game.City;
@@ -40,6 +41,8 @@ namespace CitiesIIAgentBridge
             citySession = Guid.NewGuid().ToString("N");
             settings = new BridgeSettings(this);
             settings.RegisterInOptionsUI();
+            AssetDatabase.global.LoadSettings("CitiesIIAgentBridge", settings, new BridgeSettings(this));
+            if (!settings.RememberControl) settings.AllowControl = false;
             GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(settings));
             string root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CitiesIIAgentBridge");
             mailbox = new Mailbox(root, Dispatch, () => citySession);
@@ -65,8 +68,8 @@ namespace CitiesIIAgentBridge
             tileOperation = null; pendingTiles = null;
             if (batch != null && (string)batch["status"] == "running") { batch["status"] = "interrupted"; batch["error"] = "city_changed"; }
             citySession = Guid.NewGuid().ToString("N");
-            // Changing saves invalidates pending control permission as well as entity IDs.
-            settings.AllowControl = false;
+            // Entity IDs and pending operations always reset; permission persists only by opt-in.
+            if (!settings.RememberControl) settings.AllowControl = false;
         }
 
         public void OnDispose()
@@ -92,7 +95,7 @@ namespace CitiesIIAgentBridge
             try
             {
                 bool communicated = BridgeTick.Run(
-                    () => { if (File.Exists(Path.Combine(mailbox.Root, "STOP"))) settings.AllowControl = false; },
+                    () => { if (File.Exists(Path.Combine(mailbox.Root, "STOP"))) RevokeControl(); },
                     SimulationTick,
                     () => mailbox.Publish(new JObject
                 {
@@ -113,12 +116,19 @@ namespace CitiesIIAgentBridge
             }
             catch (Exception e)
             {
-                settings.AllowControl = false;
+                RevokeControl();
                 FinishSimulation("bridge_fault");
                 if (!faulted) log.Error(e);
                 faulted = true;
             }
             return false;
+        }
+
+        private void RevokeControl()
+        {
+            if (!settings.AllowControl) return;
+            settings.AllowControl = false;
+            settings.ApplyAndSave();
         }
 
         private void MailboxContention(IOException error)
