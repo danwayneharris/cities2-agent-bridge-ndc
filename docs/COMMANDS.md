@@ -157,3 +157,15 @@ These commands require a loaded, paused city and the matching local NetworkTools
 | `nt_apply` | Current `session`, `revision`, `submission`. Requires verified current preview. Acceptance is NOT completion; independently inspect permanent geometry afterward. |
 
 Read state after each operation. Never reuse entity identities across city loads. Clear explicitly before replacing an existing selection. Poll previewReady before Apply. Missing Debug adapter is an explicit error; advertised commands alone do not prove an installed adapter.
+
+Split-point development extension: `nt_split` takes current `session`, `revision`,
+`node:{index,version}` and boolean `enabled`. Only non-junction interior nodes in
+an active ready Smooth Curve selection are eligible. Read `splitChoices` from
+`nt_get_state` for fresh candidates. Each change invalidates the preview. Clear,
+path extension and trimming clear split choices. A split fixes node position and
+aligns its planar join at every strength including zero; it does not guarantee
+vertical tangent or curvature continuity. Not yet live-verified.
+
+| Command | Arguments and result |
+|---|---|
+| `nt_split` | Current tool token, `node` identity, `enabled` boolean; toggles an eligible split constraint. |
