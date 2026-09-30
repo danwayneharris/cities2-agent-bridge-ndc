@@ -57,3 +57,18 @@ provider input schemas. Closed allOf-style compositions may reject that extensio
 a nested payload/envelope revision deserves focused compatibility tests before a
 public SDK promise. Documented this limitation instead of silently rewriting
 arbitrary schemas. No specific consumer schema is hardcoded in the adapter.
+
+## Sprint handoff
+
+Final offline results: 18 adapter tests, 13 C# provider contract checks, complete
+existing mailbox suite (including 23 recovery and 10 real-shell client checks),
+and actual synthetic MCP stdio all pass. Hardened adapter also passed an actual
+read-only MCP discovery/state call against the running consumer after the final
+live suite. Consumer-specific cases and evidence remain in its repository.
+
+No native bridge source was changed this sprint. No deploy/restart is needed for
+Python adapter changes. No host config, control preference, publication or remote
+Git operation was performed. Next bridge product priority is the generic MCP
+payload envelope/schema composition boundary plus a small independent developer
+example and packaging/compatibility checks. Keep release versioning independent
+from any consuming mod; defer broad refactoring until this contract is clearer.
