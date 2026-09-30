@@ -49,3 +49,22 @@ synthetic transport; it does not measure Unity, active journaling or agent laten
 NetworkTools now consumes the generic Python client from its own runner. No
 NetworkTools mapping belongs in this repository. Runtime provider discovery and
 native preview/Apply still require live validation before claiming compatibility.
+
+## Live consumer verification and release boundary
+
+The paused toy NetworkTools rail-merge regression passed through list_providers /
+invoke_provider on 2026-09-30, including native preview and independently inspected
+permanent Apply. The first attempt exposed a consumer activation-order bug (saved
+preferences overwrote its requested mode); the fix belongs in NetworkTools, not
+bridge routing. This validates one live consumer, not arbitrary mods or traversal.
+Evidence is retained in the consumer repository's provider-rail-merge-fixed-20260930
+capture and report. No game algorithms were added to the bridge.
+
+Removed remaining false-valued capability placeholders naming particular mods.
+Final bridge source compiles and verify-api passes (56 commands). This metadata-only
+cleanup is not deployed yet; the live tested DLL predates those removals. Added
+adapter/README.md with optional MCP installation, scope and intent recovery.
+
+The two products release independently. Provider protocol compatibility is the
+boundary; consumer-specific activation, geometry, selection and tests remain with
+the consumer. No Python/MCP requirement is introduced into either game's runtime.

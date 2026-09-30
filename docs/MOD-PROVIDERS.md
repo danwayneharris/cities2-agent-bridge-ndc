@@ -51,4 +51,6 @@ Native game junction queries remain generic game operations. Historical session 
 and captures may describe the prior interface; they are not the current API contract.
 
 Verification: generic registry tests with two unrelated toy providers; bridge compile
-and API inventory check. Native provider discovery/control is not yet live-verified.
+and API inventory check. Live discovery and a NetworkTools rail-merge preview/Apply regression passed on
+2026-09-30 after a provider-owned activation-order fix. This is one consumer/case,
+not universal provider compatibility. See the external [MCP adapter](../adapter/README.md).

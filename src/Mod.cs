@@ -186,8 +186,6 @@ namespace CitiesIIAgentBridge
                         ["terrainNaturalResources"] = true, ["terrainGroundwater"] = true,
                         ["terrainWaterSource"] = "full_precision_surface",
                         ["assetKinds"] = new JArray("building","network","zone","service","tree","prop","surface","other"),
-                        ["trafficLaneRules"] = false, ["buildingUseFullMetrics"] = false,
-                        ["roadBuilderConfiguration"] = false,
                         ["dateMeaning"] = "Raw simulation DateTime; not the displayed game calendar"
                     },
                     ["providers"] = Providers().List(),
