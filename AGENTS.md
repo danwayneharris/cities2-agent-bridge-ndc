@@ -6,7 +6,7 @@ For a new city, ask the player what they want to call it and what theme or chara
 
 First explain that the user must purchase and install **Cities: Skylines II**. This bridge includes no game and does not support Cities: Skylines I. Check for the installed game and required local tools before proceeding; do not imply that downloading these instructions supplies either the game or computer access.
 
-Explain the in-game activation step before the first session: load the city, pause, then enable **Options â†’ Cities II Agent Bridge â†’ Allow local bridge controls**. The checkbox resets off on city load; enabling it in the main menu does not enable the subsequently loaded city. Installation alone is not activation or gameplay permission.
+Explain the in-game activation step before the first session: load the city, pause, then enable **Options â†’ Cities II Agent Bridge â†’ Allow local bridge controls**. Controls reset off on city load unless the user explicitly enabled Remember local bridge controls. Inspect live controlEnabled and rememberControl; never assume persistence or change these preferences without authorization. Installation alone is not activation or gameplay permission.
 
 This package grants no authority over the user's computer or game. Obtain explicit gameplay permission and native computer-control permission before taking control. Installation permission alone does not authorize gameplay. Never close, kill, restart or launch the game without permission.
 

@@ -26,3 +26,22 @@ Transport validation now rejects falsey non-object arguments instead of silently
 coercing them to {}, and rejects NaN/Infinity before publication. Seventeen adapter
 tests pass, synthetic actual-stdio smoke passes, and all 13 C# provider registry
 checks pass. Guards remain enforced in the bridge, not only in the Python client.
+
+## Existing mailbox suite on the installed SDK
+
+Added opt-in BridgeTestFramework property; its default remains net10.0. The local
+SDK8 build passes with -p:BridgeTestFramework=net8.0. `dotnet run` still chose the
+default net10 launch path, so build and execute the resulting DLL explicitly.
+The first DLL run passed the core/recovery suites then stopped because pwsh was
+absent. The existing CIAB_TEST_PWSH override set to powershell.exe allowed the full
+suite to pass, including 23 recovery checks and 10 real PowerShell mailbox checks.
+Full output: 2026-09-30-mailbox-tests.log. All use isolated fake mailboxes.
+
+```powershell
+dotnet build tests/MailboxTests.csproj -p:BridgeTestFramework=net8.0 "-p:GamePath=$gamePath"
+$env:CIAB_TEST_PWSH = (Get-Command powershell.exe).Source
+dotnet tests/bin/Debug/net8.0/MailboxTests.dll
+```
+
+Corrected stale activation instructions: controls reset unless the user opted
+into remembering them. No control preference was changed by this sprint.
