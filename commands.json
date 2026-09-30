@@ -58,5 +58,6 @@
     "nt_select",
     "nt_strength",
     "nt_clear",
-    "nt_apply"
+    "nt_apply",
+    "nt_split"
 ]
