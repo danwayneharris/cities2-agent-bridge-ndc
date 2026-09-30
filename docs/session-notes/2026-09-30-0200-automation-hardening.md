@@ -45,3 +45,8 @@ dotnet tests/bin/Debug/net8.0/MailboxTests.dll
 
 Corrected stale activation instructions: controls reset unless the user opted
 into remembering them. No control preference was changed by this sprint.
+
+Added an explicit non-fetching referencing.Registry to input/output validation,
+covering nested $id scopes as well as direct external $ref rejection. Eighteen
+adapter tests pass. This uses the installed validator API; no external resource
+retrieval or agent configuration changes are needed.

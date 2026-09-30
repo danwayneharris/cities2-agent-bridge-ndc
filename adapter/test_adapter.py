@@ -177,4 +177,11 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
             check_local_schema({'properties':{'value':{'$ref':'https://invalid.example/schema'}}})
         check_local_schema({'$defs':{'item':{'type':'number'}},'properties':{'value':{'$ref':'#/$defs/item'}}})
 
+    async def test_nested_schema_id_cannot_enable_external_retrieval(self):
+        from referencing import Registry
+        import jsonschema
+        schema={'type':'object','properties':{'value':{'$id':'https://invalid.example/schema','$ref':'#/$defs/missing'}}}
+        with self.assertRaises(Exception):
+            jsonschema.Draft202012Validator(schema,registry=Registry()).validate({'value':2})
+
 if __name__=='__main__':unittest.main()

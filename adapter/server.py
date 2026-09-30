@@ -5,6 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 import jsonschema
+from referencing import Registry
 from mcp.server.lowlevel import Server
 from mcp.server.stdio import stdio_server
 import mcp.types as types
@@ -93,14 +94,14 @@ class Adapter:
                 else:
                     if params.name not in self.tools: raise ValueError('tool_unavailable_rediscover')
                     tool,provider,revision,command=self.tools[params.name]
-                    jsonschema.Draft202012Validator(tool.input_schema).validate(args)
+                    jsonschema.Draft202012Validator(tool.input_schema, registry=Registry()).validate(args)
                     token=args.pop('_bridge')
                     response=await self.run_serial_worker(self.client.call,'invoke_provider',
                         {'provider':provider,'revision':revision,'command':command,'args':args},
                         expected=token,intent=token['intent'])
                     if not response['ok']: raise RuntimeError(response.get('error','provider_failed'))
                     result=response['result']
-                    jsonschema.Draft202012Validator(tool.output_schema).validate(result)
+                    jsonschema.Draft202012Validator(tool.output_schema, registry=Registry()).validate(result)
                 return types.CallToolResult(content=[types.TextContent(type='text',text=json.dumps(result))],structuredContent=result)
             except Exception as error:
                 detail={'error':str(error),'requestId':self.client.last_request,'retryPolicy':'Inspect/recover the original intent; never blindly submit a new mutation.'}
