@@ -15,3 +15,9 @@ including repeated cancellation; pre-dispatch validation errors clear stale requ
 correlation; output schemas are checked during discovery. Fourteen adapter tests
 pass and the actual synthetic MCP stdio smoke passes. No game mutation was needed.
 Updated stale command count to the verified 56-command inventory.
+
+Second review fixes: a failed explicit rediscovery now clears the old tool catalog.
+Schema references are restricted to local fragments, preventing validation from
+fetching external URLs. Local $defs remain supported. Sixteen adapter tests pass.
+Live MCP stdio read-only consumer discovery/state also passed; consumer-owned
+script and capture live in the consumer repository. Road regression suite ongoing.

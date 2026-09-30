@@ -155,4 +155,17 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(result.is_error)
         self.assertEqual(a.tools,{})
 
+    async def test_failed_rediscovery_clears_previous_catalog(self):
+        c=FakeClient();a=Adapter(c);await a.list_tools(None,None)
+        self.assertTrue(a.tools)
+        c.available=False
+        result=await a.call_tool(None,types.CallToolRequestParams(name='bridge_discover',arguments={}))
+        self.assertTrue(result.is_error);self.assertEqual(a.tools,{})
+
+    async def test_external_schema_reference_rejected_without_fetch(self):
+        from server import check_local_schema
+        with self.assertRaisesRegex(ValueError,'external_schema_reference'):
+            check_local_schema({'properties':{'value':{'$ref':'https://invalid.example/schema'}}})
+        check_local_schema({'$defs':{'item':{'type':'number'}},'properties':{'value':{'$ref':'#/$defs/item'}}})
+
 if __name__=='__main__':unittest.main()

@@ -10,6 +10,17 @@ from mcp.server.stdio import stdio_server
 import mcp.types as types
 from bridge_client import Client
 
+def check_local_schema(schema):
+    """Provider schemas may use local definitions, never external fetches."""
+    if isinstance(schema, dict):
+        for key, value in schema.items():
+            if key in ('$ref', '$dynamicRef') and (not isinstance(value, str) or not value.startswith('#')):
+                raise ValueError('external_schema_reference_not_supported')
+            check_local_schema(value)
+    elif isinstance(schema, list):
+        for value in schema:
+            check_local_schema(value)
+
 class Adapter:
     def __init__(self,client):
         self.client=client;self.tools={};self.operation_lock=asyncio.Lock()
@@ -32,6 +43,7 @@ class Adapter:
             raise
 
     def discover(self):
+        self.tools = {}  # Failed refresh must not leave a stale callable catalog.
         state=self.client.status()
         response=self.client.call('list_providers',expected=state)
         if not response['ok']: raise RuntimeError(response.get('error','discovery_failed'))
@@ -43,6 +55,8 @@ class Adapter:
                 # Fixed-length hash avoids truncation collisions for arbitrary valid provider IDs.
                 key=provider['id']+'/'+command['name']
                 name='mod_'+hashlib.sha256(key.encode()).hexdigest()[:24]
+                check_local_schema(command['inputSchema'])
+                check_local_schema(command['outputSchema'])
                 schema=json.loads(json.dumps(command['inputSchema']))
                 if '_bridge' in schema.get('properties',{}): raise RuntimeError('reserved_argument:_bridge')
                 schema.setdefault('properties',{})['_bridge']={'type':'object','properties':{

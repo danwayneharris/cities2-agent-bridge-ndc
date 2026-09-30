@@ -41,3 +41,9 @@ The standard-library `bridge_client.py` can also be imported without installing 
 PowerShell remains useful for Windows bootstrap and build entry points; persistent
 Python owns repeated transport and test orchestration. This path does not currently
 emit the optional PowerShell journal events; retain response and intent captures.
+
+Hardening: cancelled MCP calls retain serialization until their bounded mailbox
+worker finishes. Failed rediscovery clears the callable catalog. Schemas may use
+local fragment references (`#/$defs/...`), but external references are rejected;
+validation never needs network access. Validation errors before dispatch do not
+report a previous operation's request ID.
