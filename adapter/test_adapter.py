@@ -73,6 +73,15 @@ class ClientTests(unittest.TestCase):
     def test_request_size_before_publication(self):
         with self.assertRaisesRegex(BridgeError,'request_too_large'):self.client.call('write',{'huge':'x'*18000})
         self.assertEqual(self.fake.calls,[])
+    def test_non_object_args_and_nonfinite_values_never_publish(self):
+        for args in ([], '', False, 0):
+            with self.assertRaisesRegex(ValueError,'args_object_required'):
+                self.client.call('write',args)
+        for value in (float('nan'),float('inf')):
+            with self.assertRaises(ValueError):self.client.call('write',{'value':value})
+        self.assertEqual(self.fake.calls,[])
+        self.assertEqual(list((self.base/'mailbox/requests').glob('*.json')),[])
+
     def test_no_game(self):
         self.fake.close();(self.base/'mailbox/session.json').unlink()
         with self.assertRaisesRegex(BridgeError,'game_unavailable'):self.client.status()

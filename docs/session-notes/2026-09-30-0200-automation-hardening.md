@@ -21,3 +21,8 @@ Schema references are restricted to local fragments, preventing validation from
 fetching external URLs. Local $defs remain supported. Sixteen adapter tests pass.
 Live MCP stdio read-only consumer discovery/state also passed; consumer-owned
 script and capture live in the consumer repository. Road regression suite ongoing.
+
+Transport validation now rejects falsey non-object arguments instead of silently
+coercing them to {}, and rejects NaN/Infinity before publication. Seventeen adapter
+tests pass, synthetic actual-stdio smoke passes, and all 13 C# provider registry
+checks pass. Guards remain enforced in the bridge, not only in the Python client.

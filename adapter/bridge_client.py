@@ -66,7 +66,7 @@ class Client:
 
     def call(self, command, args=None, *, expected=None, intent=None, timeout=15):
         with self.lock:
-            return self._call(command,args or {},expected,intent,timeout)
+            return self._call(command,{} if args is None else args,expected,intent,timeout)
 
     def _call(self, command,args,expected,intent,timeout):
         if not 1<=timeout<=45: raise ValueError('timeout_out_of_range')
@@ -87,7 +87,7 @@ class Client:
                 raise BridgeError('stale_session')
             packet=dict(protocol=1,id=intent,session=state['session'],citySession=state['citySession'],
                         command=command,args=args,expiresUtc=(dt.datetime.now(dt.timezone.utc)+dt.timedelta(seconds=timeout)).isoformat())
-            data=json.dumps(packet,separators=(',',':')).encode('utf-8')
+            data=json.dumps(packet,separators=(',',':'),allow_nan=False).encode('utf-8')
             if len(data)>16384: raise BridgeError('request_too_large')
             # Exclusive, flushed write before submission. Another adapter cannot reuse this intent.
             with record.open('x',encoding='utf-8') as f:
