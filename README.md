@@ -105,3 +105,8 @@ With Remember off, the historical reset-on-load behavior above still applies.
 Turning Allow off persists too. STOP and bridge faults revoke permission and save
 it off; removing STOP alone does not re-enable control. Native settings persistence
 is compiled/deployed but needs an in-game restart verification.
+
+## Optional mod automation
+
+Read [MOD-PROVIDERS.md](docs/MOD-PROVIDERS.md) for the generic opt-in contract.
+Individual mods own their provider APIs; bridge releases have no dependency on them.

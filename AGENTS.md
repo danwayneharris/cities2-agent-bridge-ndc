@@ -35,3 +35,8 @@ Run documented commands from the repository root even when reading a doc under d
 ## General Operating Philosophy
 
 - At the beginning of each session, create a new .md doc in docs/session-notes/ that includes the \ date and time in the filename, and for each small incremental change during that session, document what the change was, whether it did or didn't work, or what was learned from testing it. Then commit that change to git along with the updated doc EVEN IF THE CHANGE DIDN'T WORK.  If the change was bad, manually revert (not git revert) and update the doc accordingly.  This is to ensure that all lessons are learned and we have a clear picture of our potentially messy journey.
+
+## Optional mod automation
+
+Read [MOD-PROVIDERS.md](docs/MOD-PROVIDERS.md) for the generic opt-in contract.
+Individual mods own their provider APIs; bridge releases have no dependency on them.
