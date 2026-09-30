@@ -20,3 +20,16 @@ guards, mutation policy and discovery. Bridge compiles to non-deploying output a
 missing NuGet assets; explicit restore resolved it and Compile now passes. Six
 runner tests pass. Existing mailbox test run hit its net10 target with only SDK8
 installed; investigate an override before changing project policy. No live tests.
+
+## Persistent-client / MCP first attempt
+
+Pinned official Python MCP SDK 2.2.0 and jsonschema 4.26.0 in a uv lockfile.
+Implemented generic descriptor-driven tools and durable intent records before
+mailbox publication. No mod-specific tool names appear in the adapter. The initial
+11-test run failed three MCP assertions: SDK v2 exposes snake_case Python fields
+although constructors accept wire aliases. Synthetic heartbeat tests also exposed
+a fixture writer race; fix the fixture and surface thread failures instead of
+ignoring them. This failed checkpoint is retained per project convention.
+
+The existing mailbox suite's net10 target still defeated a CLI net8 override;
+new standalone provider tests run on the installed SDK8 without changing that suite.
