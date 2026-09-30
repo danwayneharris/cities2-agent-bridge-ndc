@@ -47,3 +47,12 @@ worker finishes. Failed rediscovery clears the callable catalog. Schemas may use
 local fragment references (`#/$defs/...`), but external references are rejected;
 validation never needs network access. Validation errors before dispatch do not
 report a previous operation's request ID.
+
+
+Current scope limits: MCP adds a reserved `_bridge` property to each input schema.
+Simple object/property schemas and local definitions are supported; a provider
+whose closed schema composition rejects extra root properties may need an adapter
+schema-envelope revision. A provider argument named `_bridge` is rejected explicitly.
+This is an experimental interface, not a promise to support every JSON Schema
+composition. Native commands remain available through the generic Python client;
+there is no full native-command MCP catalog or host configuration installed here.

@@ -50,3 +50,10 @@ Added an explicit non-fetching referencing.Registry to input/output validation,
 covering nested $id scopes as well as direct external $ref rejection. Eighteen
 adapter tests pass. This uses the installed validator API; no external resource
 retrieval or agent configuration changes are needed.
+
+
+Bounded review remainder: the prototype injects reserved `_bridge` metadata into
+provider input schemas. Closed allOf-style compositions may reject that extension;
+a nested payload/envelope revision deserves focused compatibility tests before a
+public SDK promise. Documented this limitation instead of silently rewriting
+arbitrary schemas. No specific consumer schema is hardcoded in the adapter.
