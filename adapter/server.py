@@ -59,14 +59,14 @@ class Adapter:
                 else:
                     if params.name not in self.tools: raise ValueError('tool_unavailable_rediscover')
                     tool,provider,revision,command=self.tools[params.name]
-                    jsonschema.Draft202012Validator(tool.inputSchema).validate(args)
+                    jsonschema.Draft202012Validator(tool.input_schema).validate(args)
                     token=args.pop('_bridge')
                     response=await asyncio.to_thread(self.client.call,'invoke_provider',
                         {'provider':provider,'revision':revision,'command':command,'args':args},
                         expected=token,intent=token['intent'])
                     if not response['ok']: raise RuntimeError(response.get('error','provider_failed'))
                     result=response['result']
-                    jsonschema.Draft202012Validator(tool.outputSchema).validate(result)
+                    jsonschema.Draft202012Validator(tool.output_schema).validate(result)
                 return types.CallToolResult(content=[types.TextContent(type='text',text=json.dumps(result))],structuredContent=result)
             except Exception as error:
                 detail={'error':str(error),'requestId':self.client.last_request,'retryPolicy':'Inspect/recover the original intent; never blindly submit a new mutation.'}

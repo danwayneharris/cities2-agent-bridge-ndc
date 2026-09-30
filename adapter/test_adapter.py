@@ -14,16 +14,23 @@ import mcp.types as types
 
 class FakeMailbox:
     def __init__(self,root,cadence=.005):
-        self.root=Path(root);self.cadence=cadence;self.calls=[];self.stop=threading.Event();self.respond=True
+        self.root=Path(root);self.cadence=cadence;self.calls=[];self.stop=threading.Event();self.respond=True;self.publish_lock=threading.Lock();self.errors=[]
         self.state=dict(protocol=1,session='process-a',citySession='city-a',status='ready',controlEnabled=True)
         for name in ('requests','responses'): (self.root/name).mkdir(parents=True)
         self.publish();self.thread=threading.Thread(target=self.run,daemon=True);self.thread.start()
     def publish(self):
         value=self.state|{'heartbeatUtc':dt.datetime.now(dt.timezone.utc).isoformat()}
-        temp=self.root/'heartbeat.tmp';temp.write_text(json.dumps(value));os.replace(temp,self.root/'session.json')
+        with self.publish_lock:
+            temp=self.root/'heartbeat.tmp';temp.write_text(json.dumps(value))
+            for attempt in range(20):
+                try:os.replace(temp,self.root/'session.json');break
+                except PermissionError:
+                    if attempt==19:raise
+                    time.sleep(.002)
     def run(self):
         while not self.stop.wait(self.cadence):
-            self.publish()
+            try:self.publish()
+            except Exception as error:self.errors.append(error);return
             for path in (self.root/'requests').glob('*.json'):
                 packet=json.loads(path.read_text());self.calls.append(packet)
                 if self.respond:
@@ -32,7 +39,9 @@ class FakeMailbox:
                     dest=self.root/'responses'/path.name;temp=dest.with_suffix('.tmp')
                     temp.write_text(json.dumps(reply));os.replace(temp,dest)
                 path.unlink()
-    def close(self):self.stop.set();self.thread.join(2)
+    def close(self):
+        self.stop.set();self.thread.join(2)
+        if self.errors:raise self.errors[0]
 
 class ClientTests(unittest.TestCase):
     def setUp(self):
@@ -93,14 +102,14 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
         for tool in listing.tools[2:]:
             args={'value':2,'_bridge':{'session':'process-a','citySession':'city-a','intent':uuid.uuid4().hex}}
             result=await a.call_tool(None,types.CallToolRequestParams(name=tool.name,arguments=args))
-            self.assertFalse(result.isError);self.assertIn(result.structuredContent['provider'],tool.title)
+            self.assertFalse(result.is_error);self.assertIn(result.structured_content['provider'],tool.title)
     async def test_invalid_schema_never_invokes(self):
         c=FakeClient();a=Adapter(c);listing=await a.list_tools(None,None);count=len(c.calls)
         result=await a.call_tool(None,types.CallToolRequestParams(name=listing.tools[2].name,arguments={'value':-1}))
-        self.assertTrue(result.isError);self.assertEqual(len(c.calls),count)
+        self.assertTrue(result.is_error);self.assertEqual(len(c.calls),count)
     async def test_no_game_keeps_status_tools(self):
         c=FakeClient();c.available=False;a=Adapter(c)
         self.assertEqual(len((await a.list_tools(None,None)).tools),2)
         result=await a.call_tool(None,types.CallToolRequestParams(name='bridge_status',arguments={}))
-        self.assertTrue(result.isError)
+        self.assertTrue(result.is_error)
 if __name__=='__main__':unittest.main()

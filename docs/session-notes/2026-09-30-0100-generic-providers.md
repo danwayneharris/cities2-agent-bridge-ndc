@@ -33,3 +33,19 @@ ignoring them. This failed checkpoint is retained per project convention.
 
 The existing mailbox suite's net10 target still defeated a CLI net8 override;
 new standalone provider tests run on the installed SDK8 without changing that suite.
+
+## SDK correction and transport evidence
+
+Corrected MCP SDK 2.2 model attribute access to snake_case and made the synthetic
+heartbeat writer serialize its replacement writes. Eleven adapter tests now pass.
+An actual SDK client/server stdio handshake discovers and invokes an independent
+synthetic provider successfully (adapter/stdio_smoke.py). No game was involved.
+
+The retained 12-pair synthetic benchmark used a 250 ms mailbox cadence:
+PowerShell subprocess median 475 ms, persistent Python median 227 ms. See
+provider-client-benchmark-20260930.json. This isolates process startup plus the
+synthetic transport; it does not measure Unity, active journaling or agent latency.
+
+NetworkTools now consumes the generic Python client from its own runner. No
+NetworkTools mapping belongs in this repository. Runtime provider discovery and
+native preview/Apply still require live validation before claiming compatibility.
