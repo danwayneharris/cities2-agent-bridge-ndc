@@ -112,4 +112,47 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len((await a.list_tools(None,None)).tools),2)
         result=await a.call_tool(None,types.CallToolRequestParams(name='bridge_status',arguments={}))
         self.assertTrue(result.is_error)
+    async def test_schema_failure_does_not_report_previous_request(self):
+        c=FakeClient();a=Adapter(c);listing=await a.list_tools(None,None)
+        c.last_request='previous-operation'
+        result=await a.call_tool(None,types.CallToolRequestParams(name=listing.tools[2].name,arguments={}))
+        self.assertTrue(result.is_error)
+        self.assertIsNone(result.structured_content['requestId'])
+
+    async def test_cancelled_call_holds_lock_until_worker_finishes(self):
+        started=threading.Event();release=threading.Event()
+        class BlockingClient(FakeClient):
+            def status(self):
+                started.set()
+                if not release.wait(3):raise RuntimeError('test_worker_timeout')
+                return super().status()
+        c=BlockingClient();a=Adapter(c)
+        first=asyncio.create_task(a.call_tool(None,types.CallToolRequestParams(name='bridge_status',arguments={})))
+        try:
+            for _ in range(100):
+                if started.is_set():break
+                await asyncio.sleep(.01)
+            self.assertTrue(started.is_set())
+            first.cancel()
+            await asyncio.sleep(.03)
+            self.assertTrue(a.operation_lock.locked())
+            self.assertFalse(first.done())
+            first.cancel()
+            await asyncio.sleep(.03)
+            self.assertTrue(a.operation_lock.locked())
+        finally:release.set()
+        with self.assertRaises(asyncio.CancelledError):await first
+        self.assertFalse(a.operation_lock.locked())
+
+    async def test_invalid_output_schema_rejects_discovery(self):
+        class InvalidSchemaClient(FakeClient):
+            def call(self,*args,**kwargs):
+                response=super().call(*args,**kwargs)
+                response['result']['providers'][0]['commands'][0]['outputSchema']={'type':'not-a-json-type'}
+                return response
+        a=Adapter(InvalidSchemaClient())
+        result=await a.call_tool(None,types.CallToolRequestParams(name='bridge_discover',arguments={}))
+        self.assertTrue(result.is_error)
+        self.assertEqual(a.tools,{})
+
 if __name__=='__main__':unittest.main()

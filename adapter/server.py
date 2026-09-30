@@ -13,6 +13,24 @@ from bridge_client import Client
 class Adapter:
     def __init__(self,client):
         self.client=client;self.tools={};self.operation_lock=asyncio.Lock()
+    async def run_serial_worker(self, function, *args, **kwargs):
+        # Cancellation cannot cancel a running mailbox worker. Keep our caller's
+        # operation lock until it finishes so another tool cannot overlap it.
+        task = asyncio.create_task(asyncio.to_thread(function, *args, **kwargs))
+        try:
+            return await asyncio.shield(task)
+        except asyncio.CancelledError:
+            while not task.done():
+                try:
+                    await asyncio.shield(task)
+                except asyncio.CancelledError:
+                    continue  # Repeated cancellation must not release the lock either.
+                except Exception:
+                    break
+            if not task.cancelled():
+                task.exception()  # Observe failures; original intent remains on disk.
+            raise
+
     def discover(self):
         state=self.client.status()
         response=self.client.call('list_providers',expected=state)
@@ -33,6 +51,7 @@ class Adapter:
                     'required':['session','citySession','intent'],'additionalProperties':False}
                 schema.setdefault('required',[]).append('_bridge')
                 jsonschema.Draft202012Validator.check_schema(schema)
+                jsonschema.Draft202012Validator.check_schema(command['outputSchema'])
                 if name in tools: raise RuntimeError('tool_name_collision')
                 tool=types.Tool(name=name,title=key,description=command['description'],inputSchema=schema,
                     outputSchema=command['outputSchema'],annotations=types.ToolAnnotations(readOnlyHint=command['readOnly'],
@@ -42,26 +61,27 @@ class Adapter:
         return catalog
     async def list_tools(self,context,params):
         async with self.operation_lock:
-            try: await asyncio.to_thread(self.discover)
+            try: await self.run_serial_worker(self.discover)
             except Exception: self.tools={}
             return types.ListToolsResult(tools=[types.Tool(name='bridge_status',description='Read heartbeat only. Returns current session identities; no game launch or pause.',inputSchema={'type':'object','additionalProperties':False}),
                 types.Tool(name='bridge_discover',description='Discover opt-in providers; returns explicit errors if unavailable. Does not pause.',inputSchema={'type':'object','additionalProperties':False})]+[x[0] for x in self.tools.values()])
     async def call_tool(self,context,params):
         async with self.operation_lock:
+            self.client.last_request = None
             try:
                 args=dict(params.arguments or {})
                 if params.name=='bridge_status':
                     if args: raise ValueError('unexpected_arguments')
-                    result=await asyncio.to_thread(self.client.status)
+                    result=await self.run_serial_worker(self.client.status)
                 elif params.name=='bridge_discover':
                     if args: raise ValueError('unexpected_arguments')
-                    result=await asyncio.to_thread(self.discover)
+                    result=await self.run_serial_worker(self.discover)
                 else:
                     if params.name not in self.tools: raise ValueError('tool_unavailable_rediscover')
                     tool,provider,revision,command=self.tools[params.name]
                     jsonschema.Draft202012Validator(tool.input_schema).validate(args)
                     token=args.pop('_bridge')
-                    response=await asyncio.to_thread(self.client.call,'invoke_provider',
+                    response=await self.run_serial_worker(self.client.call,'invoke_provider',
                         {'provider':provider,'revision':revision,'command':command,'args':args},
                         expected=token,intent=token['intent'])
                     if not response['ok']: raise RuntimeError(response.get('error','provider_failed'))

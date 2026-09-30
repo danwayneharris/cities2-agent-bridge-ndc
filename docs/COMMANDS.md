@@ -1,6 +1,6 @@
 # Command reference — 0.5.0 community
 
-53 commands. Analysis pauses when controls are enabled; otherwise pause manually. Poll asynchronous operation IDs through completion.
+56 commands. Analysis pauses when controls are enabled; otherwise pause manually. Poll asynchronous operation IDs through completion.
 
 Known 0.5.0 issue: named district creation/editing can apply successfully and then report an EntityCommandBuffer naming-notification error. Inspect a fresh atlas and the operation result before any retry. Never replay an uncertain mutation. Boundary edits without a name have completed normally. See RELEASE-NOTES.md.
 
