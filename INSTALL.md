@@ -48,7 +48,7 @@ Pause the city manually. Read-only connection check:
 pwsh -NoProfile -File .\bridge.ps1 ping
 ```
 
-Before gameplay, agree on duration, construction/spending scope, save behavior, and whether native computer control is allowed. Then have the owner enable **Options > Cities II Agent Bridge > Allow local bridge controls** in the loaded city. It resets off on city changes by design.
+Before gameplay, agree on duration, construction/spending scope, save behavior, and whether native computer control is allowed. Then have the owner enable **Options > Cities II Agent Bridge > Allow local bridge controls** in the loaded city. It defaults off on city changes. The optional Remember local bridge controls setting restores the user's saved choice across loads and restarts; STOP always overrides it.
 
 ```powershell
 pwsh -NoProfile -File .\bridge.ps1 pause_for_analysis

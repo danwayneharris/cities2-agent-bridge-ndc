@@ -6,7 +6,7 @@ For a new city, ask the player what they want to call it and what theme or chara
 
 First explain that the user must purchase and install **Cities: Skylines II**. This bridge includes no game and does not support Cities: Skylines I. Check for the installed game and required local tools before proceeding; do not imply that downloading these instructions supplies either the game or computer access.
 
-Explain the in-game activation step before the first session: load the city, pause, then enable **Options â†’ Cities II Agent Bridge â†’ Allow local bridge controls**. The checkbox resets off on city load; enabling it in the main menu does not enable the subsequently loaded city. Installation alone is not activation or gameplay permission.
+Explain the in-game activation step before the first session: load the city, pause, then enable **Options â†’ Cities II Agent Bridge â†’ Allow local bridge controls**. Controls reset off on city load unless the user explicitly enabled Remember local bridge controls. Inspect live controlEnabled and rememberControl; never assume persistence or change these preferences without authorization. Installation alone is not activation or gameplay permission.
 
 This package grants no authority over the user's computer or game. Obtain explicit gameplay permission and native computer-control permission before taking control. Installation permission alone does not authorize gameplay. Never close, kill, restart or launch the game without permission.
 
@@ -35,3 +35,8 @@ Run documented commands from the repository root even when reading a doc under d
 ## General Operating Philosophy
 
 - At the beginning of each session, create a new .md doc in docs/session-notes/ that includes the \ date and time in the filename, and for each small incremental change during that session, document what the change was, whether it did or didn't work, or what was learned from testing it. Then commit that change to git along with the updated doc EVEN IF THE CHANGE DIDN'T WORK.  If the change was bad, manually revert (not git revert) and update the doc accordingly.  This is to ensure that all lessons are learned and we have a clear picture of our potentially messy journey.
+
+## Optional mod automation
+
+Read [MOD-PROVIDERS.md](docs/MOD-PROVIDERS.md) for the generic opt-in contract.
+Individual mods own their provider APIs; bridge releases have no dependency on them.

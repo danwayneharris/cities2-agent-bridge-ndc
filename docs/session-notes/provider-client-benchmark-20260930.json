@@ -1,0 +1,113 @@
+{
+  "scope": "synthetic ping; journal inactive; 250ms fake-server cadence; not game/agent performance; small sample",
+  "rows": [
+    {
+      "mode": "powershell",
+      "seconds": 0.38676339999074116
+    },
+    {
+      "mode": "persistent",
+      "seconds": 0.15990899997996166
+    },
+    {
+      "mode": "persistent",
+      "seconds": 0.260382300009951
+    },
+    {
+      "mode": "powershell",
+      "seconds": 0.5806109000113793
+    },
+    {
+      "mode": "powershell",
+      "seconds": 0.4824083999847062
+    },
+    {
+      "mode": "persistent",
+      "seconds": 0.2240229999879375
+    },
+    {
+      "mode": "persistent",
+      "seconds": 0.2603703000349924
+    },
+    {
+      "mode": "powershell",
+      "seconds": 0.26618580002104864
+    },
+    {
+      "mode": "powershell",
+      "seconds": 0.3650482000084594
+    },
+    {
+      "mode": "persistent",
+      "seconds": 0.16140740003902465
+    },
+    {
+      "mode": "persistent",
+      "seconds": 0.2600990000064485
+    },
+    {
+      "mode": "powershell",
+      "seconds": 0.5953820000286214
+    },
+    {
+      "mode": "powershell",
+      "seconds": 0.48473520000698045
+    },
+    {
+      "mode": "persistent",
+      "seconds": 0.22997250000480562
+    },
+    {
+      "mode": "persistent",
+      "seconds": 0.21060060005402192
+    },
+    {
+      "mode": "powershell",
+      "seconds": 0.3722673000302166
+    },
+    {
+      "mode": "powershell",
+      "seconds": 0.46686340001178905
+    },
+    {
+      "mode": "persistent",
+      "seconds": 0.22349290002603084
+    },
+    {
+      "mode": "persistent",
+      "seconds": 0.2594888000166975
+    },
+    {
+      "mode": "powershell",
+      "seconds": 0.5847259000292979
+    },
+    {
+      "mode": "powershell",
+      "seconds": 0.5026943000266328
+    },
+    {
+      "mode": "persistent",
+      "seconds": 0.16088649997254834
+    },
+    {
+      "mode": "persistent",
+      "seconds": 0.26030660001561046
+    },
+    {
+      "mode": "powershell",
+      "seconds": 0.3629128000466153
+    }
+  ],
+  "summary": {
+    "powershell": {
+      "count": 12,
+      "median": 0.4746358999982476,
+      "max": 0.5953820000286214
+    },
+    "persistent": {
+      "count": 12,
+      "median": 0.22699774999637157,
+      "max": 0.260382300009951
+    }
+  }
+}

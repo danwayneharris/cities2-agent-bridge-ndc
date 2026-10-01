@@ -1,6 +1,6 @@
 # Command reference — 0.5.0 community
 
-53 commands. Analysis pauses when controls are enabled; otherwise pause manually. Poll asynchronous operation IDs through completion.
+56 commands. Analysis pauses when controls are enabled; otherwise pause manually. Poll asynchronous operation IDs through completion.
 
 Known 0.5.0 issue: named district creation/editing can apply successfully and then report an EntityCommandBuffer naming-notification error. Inspect a fresh atlas and the operation result before any retry. Never replay an uncertain mutation. Boundary edits without a name have completed normally. See RELEASE-NOTES.md.
 
@@ -143,29 +143,10 @@ Offline checks cannot validate the live overlay correspondence or water appearan
 observation of matching temporary junctions. Not an Apply validation verdict.
 See [preview contract](JUNCTION-SNAPSHOTS.md#preview-observations).
 
-## NetworkTools development adapter (Debug builds only)
+## Optional mod providers
 
-These commands require a loaded, paused city and the matching local NetworkTools Debug build. Mutations require enabled bridge controls and respect STOP. They do not enable a disabled mod in the playset; `nt_activate` activates its Smooth Curve tool.
+- `list_providers`: discover opted-in providers and schemas; inspect complete/errors.
+- `invoke_provider`: provider, revision, command and args; generic guarded dispatch.
 
-| Command | Arguments and result |
-|---|---|
-| `nt_get_state` | Read tool session, revision, submission, phase, endpoints, strength and previewReady. |
-| `nt_activate` | Activate Smooth Curve. Poll state before selecting. |
-| `nt_clear` | Current `session`, `revision`; clear selection. |
-| `nt_select` | Current `session`, `revision`, `start` and `end` objects with live `index`/`version`. Requires Idle; uses existing path selection, maximum 128 nodes. |
-| `nt_strength` | Current `session`, `revision`, numeric `value` in [0,1]. |
-| `nt_apply` | Current `session`, `revision`, `submission`. Requires verified current preview. Acceptance is NOT completion; independently inspect permanent geometry afterward. |
-
-Read state after each operation. Never reuse entity identities across city loads. Clear explicitly before replacing an existing selection. Poll previewReady before Apply. Missing Debug adapter is an explicit error; advertised commands alone do not prove an installed adapter.
-
-Split-point development extension: `nt_split` takes current `session`, `revision`,
-`node:{index,version}` and boolean `enabled`. Only non-junction interior nodes in
-an active ready Smooth Curve selection are eligible. Read `splitChoices` from
-`nt_get_state` for fresh candidates. Each change invalidates the preview. Clear,
-path extension and trimming clear split choices. A split fixes node position and
-aligns its planar join at every strength including zero; it does not guarantee
-vertical tangent or curvature continuity. Not yet live-verified.
-
-| Command | Arguments and result |
-|---|---|
-| `nt_split` | Current tool token, `node` identity, `enabled` boolean; toggles an eligible split constraint. |
+See [provider protocol](MOD-PROVIDERS.md). No individual mod integration is built
+into the bridge; participating mods own their commands and compatibility versions.

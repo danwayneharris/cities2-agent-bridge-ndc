@@ -65,7 +65,7 @@ namespace CitiesIIAgentBridge
         private void OnPreload(Purpose purpose, GameMode mode)
         {
             FinishSimulation("city_changed", false);
-            neighborhoodPlan = null; districtAtlas = null;
+            neighborhoodPlan = null; districtAtlas = null; providers = null;
             if (ConstructionAccess.Active != null) ConstructionAccess.Finish(ConstructionAccess.Active,"interrupted","city_changed");
             tileOperation = null; pendingTiles = null;
             if (batch != null && (string)batch["status"] == "running") { batch["status"] = "interrupted"; batch["error"] = "city_changed"; }
@@ -78,7 +78,7 @@ namespace CitiesIIAgentBridge
         public void OnDispose()
         {
             FinishSimulation("mod_disposed");
-            disposed = true;
+            disposed = true; providers = null;
             if (GameManager.instance != null)
             {
                 if (updater != null) GameManager.instance.UnregisterUpdater(updater);
@@ -159,7 +159,7 @@ namespace CitiesIIAgentBridge
         private JObject Dispatch(string command, JObject args)
         {
             // These status polls must not terminate an active bounded simulation step.
-            bool statusOnly = command.StartsWith("nt_", StringComparison.Ordinal) || command == "get_junction_snapshot" || command == "get_junction_preview" || command == "ping" || command == "get_capabilities" || command == "get_operation" || command == "get_batch" || command == "get_simulation_step";
+            bool statusOnly = (command == "list_providers" || command == "invoke_provider") || command == "get_junction_snapshot" || command == "get_junction_preview" || command == "ping" || command == "get_capabilities" || command == "get_operation" || command == "get_batch" || command == "get_simulation_step";
             if(!statusOnly && command != "simulate_step" && command != "cancel_simulation_step" && command != "set_simulation_speed" && command != "set_camera")
             {
                 if(settings.AllowControl) PauseAnalysis();
@@ -170,18 +170,13 @@ namespace CitiesIIAgentBridge
                 throw new InvalidOperationException("batch_in_progress_wait_or_cancel_batch");
             switch (command)
             {
-                case "nt_get_state": return NetworkToolsCommand("state", args);
-                case "nt_activate": return NetworkToolsCommand("activate", args);
-                case "nt_select": return NetworkToolsCommand("select", args);
-                case "nt_strength": return NetworkToolsCommand("strength", args);
-                case "nt_clear": return NetworkToolsCommand("clear", args);
-                case "nt_apply": return NetworkToolsCommand("apply", args);
-                case "nt_split": return NetworkToolsCommand("split", args);
+                case "list_providers": return Providers().List();
+                case "invoke_provider": return ProviderCall(args);
                 case "ping": return new JObject { ["pong"] = true, ["modVersion"] = ModVersion };
                 case "get_capabilities": return new JObject
                 {
-                    ["read"] = new JArray("nt_get_state", "ping", "get_capabilities", "get_city_state", "get_camera", "get_selected", "inspect_entity", "get_water_facilities"),
-                    ["control"] = new JArray("nt_split","nt_activate","nt_select","nt_strength","nt_clear","nt_apply","create_district","edit_district","set_service_districts","set_camera", "set_simulation_speed", "build_road", "build_network", "upgrade_network", "zone_rectangle", "clear_zoning", "place_building", "relocate_building", "demolish", "purchase_tiles", "set_tax", "set_service_budget", "save_checkpoint", "batch_execute"),
+                    ["read"] = new JArray("list_providers", "ping", "get_capabilities", "get_city_state", "get_camera", "get_selected", "inspect_entity", "get_water_facilities"),
+                    ["control"] = new JArray("invoke_provider","create_district","edit_district","set_service_districts","set_camera", "set_simulation_speed", "build_road", "build_network", "upgrade_network", "zone_rectangle", "clear_zoning", "place_building", "relocate_building", "demolish", "purchase_tiles", "set_tax", "set_service_budget", "save_checkpoint", "batch_execute"),
                     ["constructionQueries"] = new JArray("get_build_prefabs", "get_prefab_details", "get_network", "get_network_edges", "get_junction_snapshot", "get_junction_preview", "trace_network", "get_zone_cells", "get_operation", "get_batch", "get_city_management", "get_services", "sample_terrain", "get_tiles", "get_buildings", "diagnose_connections"),
                     ["buildVersion"] = ModVersion, ["liveValidation"] = "community_binary_requires_live_validation",
                     ["visibility"] = new JObject {
@@ -191,13 +186,9 @@ namespace CitiesIIAgentBridge
                         ["terrainNaturalResources"] = true, ["terrainGroundwater"] = true,
                         ["terrainWaterSource"] = "full_precision_surface",
                         ["assetKinds"] = new JArray("building","network","zone","service","tree","prop","surface","other"),
-                        ["trafficLaneRules"] = false, ["buildingUseFullMetrics"] = false,
-                        ["roadBuilderConfiguration"] = false,
                         ["dateMeaning"] = "Raw simulation DateTime; not the displayed game calendar"
                     },
-                    ["relevantAssemblies"] = new JArray(AppDomain.CurrentDomain.GetAssemblies()
-                        .Where(a => new[] { "Traffic", "BuildingUse", "RoadBuilder", "FindIt", "PlopTheGrowables", "CityPlanningDraft", "CitiesIIAgentBridge" }.Contains(a.GetName().Name))
-                        .Select(a => new JObject { ["name"] = a.GetName().Name, ["version"] = a.GetName().Version.ToString(), ["status"] = "assembly_loaded_not_health_verified" })),
+                    ["providers"] = Providers().List(),
                     ["planning"] = new JArray("get_district_atlas","get_city_map","get_city_diagnostics","find_building_sites","preview_building","plan_neighborhood","execute_neighborhood","get_neighborhood_plan"),
                     ["simulation"] = new JArray("pause_for_analysis","simulate_step","get_simulation_step","cancel_simulation_step","cancel_batch"),
                     ["analysisPausesGame"] = true,
