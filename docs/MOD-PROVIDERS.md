@@ -54,3 +54,8 @@ Verification: generic registry tests with two unrelated toy providers; bridge co
 and API inventory check. Live discovery and a NetworkTools rail-merge preview/Apply regression passed on
 2026-09-30 after a provider-owned activation-order fix. This is one consumer/case,
 not universal provider compatibility. See the external [MCP adapter](../adapter/README.md).
+
+## Minimal developer example
+
+See [Hello Bridge](../example/README.md) for a standalone read-only mod, build instructions,
+and discovery/invocation walkthrough. It needs no bridge assembly or submodule.

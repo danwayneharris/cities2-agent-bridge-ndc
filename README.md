@@ -110,3 +110,8 @@ is compiled/deployed but needs an in-game restart verification.
 
 Read [MOD-PROVIDERS.md](docs/MOD-PROVIDERS.md) for the generic opt-in contract.
 Individual mods own their provider APIs; bridge releases have no dependency on them.
+
+## Minimal developer example
+
+See [Hello Bridge](example/README.md) for a standalone read-only mod, build instructions,
+and discovery/invocation walkthrough. It needs no bridge assembly or submodule.
