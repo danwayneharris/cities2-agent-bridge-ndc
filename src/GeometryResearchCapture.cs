@@ -103,6 +103,7 @@ namespace CitiesIIAgentBridge
         {
             if (depth > 16) throw new InvalidOperationException("field_depth_limit");
             if (value is Entity entity) { enqueue(entity); return new JArray(entity.Index, entity.Version); }
+            if (value is EntityArchetype archetype) return CaptureGeometryArchetype(archetype);
             var type = value.GetType();
             if (type.IsEnum) return JToken.FromObject(Convert.ChangeType(value, Enum.GetUnderlyingType(type)));
             if (type.IsPrimitive) {
@@ -117,6 +118,20 @@ namespace CitiesIIAgentBridge
             foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).OrderBy(f => f.Name))
                 fields[field.Name] = CaptureGeometryValue(field.GetValue(value), enqueue, depth + 1);
             return fields;
+        }
+
+        private static JToken CaptureGeometryArchetype(EntityArchetype archetype)
+        {
+            var description = new JObject { ["representation"] = "archetype-component-types", ["valid"] = archetype.Valid };
+            if (archetype.Valid) {
+                description["stableHash"] = archetype.StableHash;
+                var names = new JArray();
+                // Only this locally allocated array is disposed; no borrowed job storage.
+                using (var types = archetype.GetComponentTypes(Unity.Collections.Allocator.Temp))
+                    for (int i = 0; i < types.Length; i++) names.Add(types[i].GetManagedType().AssemblyQualifiedName);
+                description["componentTypes"] = names;
+            }
+            return description;
         }
 
         private static readonly string[] GeometryCaptureTypes = {

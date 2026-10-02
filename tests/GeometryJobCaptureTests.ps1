@@ -26,6 +26,7 @@ try {
             if($operand -isnot [Colossal.Mono.Cecil.MethodReference]){continue}
             if($operand.DeclaringType.FullName -eq 'Unity.Entities.EntityManager') {throw "EntityManager call inside debugger helper: $operand"}
             if($operand.DeclaringType.FullName -like 'Unity.*' -and $operand.Name -match '^(set_|Set|Complete|Schedule|Dispose|Add|Remove|Clear)') {
+                if($method.Name -eq 'CaptureGeometryArchetype' -and $operand.Name -eq 'Dispose' -and $operand.DeclaringType.FullName -eq 'Unity.Collections.NativeArray`1<Unity.Entities.ComponentType>') {continue}
                 throw "Unexpected native mutation/lifetime operation: $operand"
             }
         }

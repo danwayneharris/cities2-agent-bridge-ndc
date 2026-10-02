@@ -31,6 +31,9 @@ try {
         }
     }
     $dispatch=[IO.File]::ReadAllText((Join-Path $PSScriptRoot '../src/Mod.cs'))
-    if(!$dispatch.Contains('bool statusOnly = command == "get_geometry_research_capture" ||')) {throw 'Capture dispatcher would auto-pause'}
+    $statusExpression=[regex]::Match($dispatch,'bool statusOnly\s*=([^;]+);').Groups[1].Value
+    foreach($command in @('get_geometry_research_capture','begin_geometry_schedule_trace','get_geometry_schedule_trace','end_geometry_schedule_trace')) {
+        if(!$statusExpression.Contains('command == "' + $command + '"')) {throw "$command dispatcher would auto-pause"}
+    }
     Write-Output "PASS: $($names.Count) installed component/buffer contracts and compiled ECS access surface. Live completeness unverified."
 } finally { $bridge.Dispose(); $game.Dispose() }
