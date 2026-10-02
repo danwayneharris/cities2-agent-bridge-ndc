@@ -71,3 +71,15 @@ Reading a chunk through a writable type handle may mark its change version; this
 and debugger suspension are instrumentation effects and must be distinguished from
 ordinary UI reproduction. This helper path is compile/API checked, not yet live
 qualified. Run tests/GeometryJobCaptureTests.ps1 against the installed game.
+
+## Bounded managed-finishing experiment
+
+Research schedule builds support `finishExecution: "managed"` when arming
+`begin_geometry_schedule_trace`. Default is `"native"`. **Managed mode changes
+execution and can change the resulting network surface**; it is not a read-only
+capture. Use only an authorized, checkpointed toy case. It runs the original
+FinishEdgeGeometryJob.Execute on the main thread after dependency completion,
+resolving its deferred entity array from the completed producer. Other stages and
+unarmed passes use their original schedulers. Execution mode is recorded in status
+and each capture. Pass count, controls, STOP, pause and city-session limits remain.
+This tests a compatibility hypothesis; it does not install a persistent fix.

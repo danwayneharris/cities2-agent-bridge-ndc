@@ -31,6 +31,7 @@ namespace CitiesIIAgentBridge
         private static JArray geometryTraceEvents = new JArray();
         private static string geometryTraceFault;
         private static bool geometryTraceBurstEnabled;
+        private static string geometryTraceFinishExecution = "native";
 
         private JObject BeginGeometryScheduleTrace(JObject args)
         {
@@ -41,6 +42,8 @@ namespace CitiesIIAgentBridge
             if ((string)args["citySession"] != citySession) throw new InvalidOperationException("city_session_changed");
             bool burst = Unity.Burst.BurstCompiler.IsEnabled;
             if (burst && !((bool?)args["allowBurst"] ?? false)) throw new InvalidOperationException("managed_geometry_launch_required_or_explicit_allowBurst");
+            string finishExecution = (string)args["finishExecution"] ?? "native";
+            if (finishExecution != "native" && finishExecution != "managed") throw new ArgumentException("finish_execution_native_or_managed_required");
             string operation = (string)args["operationId"];
             int passes = (int?)args["maxPasses"] ?? 1;
             if (string.IsNullOrWhiteSpace(operation) || operation.Length > 160 || passes < 1 || passes > 4)
@@ -63,6 +66,7 @@ namespace CitiesIIAgentBridge
             }
             geometryTraceOperation = operation; geometryTraceCity = citySession;
             geometryTraceBurstEnabled = burst;
+            geometryTraceFinishExecution = finishExecution;
             geometryTraceRemaining = passes; geometryTracePass = 0; geometryTraceSequence = 0;
             geometryTraceFault = null; geometryTraceEvents = new JArray();
             geometryTraceAllowed = () => !disposed && citySession == geometryTraceCity
@@ -77,6 +81,7 @@ namespace CitiesIIAgentBridge
             ["fault"] = geometryTraceFault, ["events"] = geometryTraceEvents.DeepClone(),
             ["gameSha256"] = GeometryTraceGameHash,
             ["burstEnabledAtArm"] = geometryTraceBurstEnabled,
+            ["finishExecution"] = geometryTraceFinishExecution,
             ["instrumentation"] = "Original jobs and schedulers; explicit completion barriers before/after captured stages; Burst setting recorded, individual worker compilation not inferred"
         };
 
@@ -153,8 +158,21 @@ namespace CitiesIIAgentBridge
             if (!GeometryTraceWanted()) return IJobParallelForDeferExtensions.Schedule(job, list, batch, dependency);
             dependency.Complete();
             CaptureGeometryEdgeSchedule(job, list, "entry");
-            var result = IJobParallelForDeferExtensions.Schedule(job, list, batch, dependency);
-            result.Complete();
+            JobHandle result;
+            if (geometryTraceFinishExecution == "managed" && typeof(T).FullName == "Game.Net.GeometrySystem+FinishEdgeGeometryJob") {
+                // Experimental execution intervention, explicitly armed and bounded to
+                // captured passes. Resolve the deferred array only after its producer
+                // completes. Call the original managed implementation, not a copied job.
+                object resolved = job;
+                typeof(T).GetField("m_Entities").SetValue(resolved, list.AsArray());
+                var managed = (T)resolved;
+                for (int i = 0; i < list.Length; i++) managed.Execute(i);
+                result = dependency;
+                geometryTraceEvents.Add(new JObject { ["event"] = "managed_finish_executed", ["edgeCount"] = list.Length });
+            } else {
+                result = IJobParallelForDeferExtensions.Schedule(job, list, batch, dependency);
+                result.Complete();
+            }
             CaptureGeometryEdgeSchedule(job, list, "exit");
             return result;
         }
@@ -223,6 +241,7 @@ namespace CitiesIIAgentBridge
             report["sequence"] = geometryTraceSequence; report["pass"] = geometryTracePass;
             report["citySession"] = geometryTraceCity; report["frame"] = UnityEngine.Time.frameCount;
             report["burstEnabledAtArm"] = geometryTraceBurstEnabled;
+            report["finishExecution"] = geometryTraceFinishExecution;
             report["boundary"] = "Completed native dependency/job handle at original scheduling site";
             report["instrumentation"] = "Native stage ordering retained; completion barriers and chunk read handles may affect timing/change versions";
             string path = SaveGeometryDiagnostic(report, geometryTraceOperation);
