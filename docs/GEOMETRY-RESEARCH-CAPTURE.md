@@ -34,3 +34,40 @@ Source type schemas and assembly module identity are included; preserve installe
 assembly hashes and operation/build/save identity in the surrounding run manifest.
 Do not label the raw schema as NetworkTools world schema 2: a validated converter
 must explicitly map fields and reject missing required data.
+
+## Native job breakpoint helpers
+
+The compiled Bridge also provides public static debugger entry points on
+CitiesIIAgentBridge.Mod:
+
+- `CaptureGeometryEntityJob(object job, int index, string phase, string operationId)`
+- `CaptureGeometryChunkJob(object job, ArchetypeChunk chunk, string phase, string operationId)`
+- `CaptureGeometryLocal(object value, string label, string operationId)`
+- `CaptureGeometryLocals(IDictionary locals, string operationId)`
+
+Use these only in verified managed GeometrySystem job frames while all other
+workers are debugger-suspended. Phase must be entry, exit or intermediate; retain
+the actual breakpoint/frame/location evidence separately. Native Burst execution
+cannot be observed this way. Do not cache or reuse job/chunk handles after resuming.
+For entity jobs, index is the actual Execute index, not an entity index.
+
+The helpers consume existing lookups/handles and never use EntityManager or wait
+for jobs. Chunk snapshots include the actual chunk identities and component arrays;
+entity jobs include the full m_Entities array and the current Execute root. They
+expand referenced entities through available lookup types, preserve full fields
+and ordered buffers, and record unsupported inputs explicitly. NativeList locals
+can be recorded while their allocation is still alive. Finishing's readable shared
+height map and named scalar/branch locals can be batched using a Hashtable passed
+to CaptureGeometryLocals, avoiding separate resumptions between those reads. The
+finishing job's readable shared
+height map can be recorded; flattening's ParallelWriter cannot be read and is
+explicitly uncaptured. Capture a readable map at a valid surrounding frame instead.
+
+Every call writes a unique JSON file beneath LocalApplicationData/CitiesIIAgentBridge/
+geometry-research and returns its path. The operationId links snapshots with the
+external run manifest, save/session/build hashes and debugger frame evidence.
+Calls retain serialized values only, and never dispose a job's native storage.
+Reading a chunk through a writable type handle may mark its change version; this
+and debugger suspension are instrumentation effects and must be distinguished from
+ordinary UI reproduction. This helper path is compile/API checked, not yet live
+qualified. Run tests/GeometryJobCaptureTests.ps1 against the installed game.
