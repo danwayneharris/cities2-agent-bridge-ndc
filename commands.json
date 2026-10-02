@@ -24,7 +24,7 @@
   "get_neighborhood_plan",
   "get_network",
   "get_network_edges",
-  "get_junction_snapshot",
+  "get_geometry_research_capture", "get_junction_snapshot",
   "get_junction_preview",
   "get_operation",
   "get_prefab_details",
