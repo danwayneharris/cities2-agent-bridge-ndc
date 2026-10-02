@@ -30,6 +30,7 @@ namespace CitiesIIAgentBridge
         private static Func<bool> geometryTraceAllowed;
         private static JArray geometryTraceEvents = new JArray();
         private static string geometryTraceFault;
+        private static bool geometryTraceBurstEnabled;
 
         private JObject BeginGeometryScheduleTrace(JObject args)
         {
@@ -38,7 +39,8 @@ namespace CitiesIIAgentBridge
             var simulation = world.GetExistingSystemManaged<SimulationSystem>();
             if (simulation == null || simulation.selectedSpeed != 0) throw new InvalidOperationException("paused_city_required");
             if ((string)args["citySession"] != citySession) throw new InvalidOperationException("city_session_changed");
-            if (Unity.Burst.BurstCompiler.IsEnabled) throw new InvalidOperationException("managed_geometry_launch_required");
+            bool burst = Unity.Burst.BurstCompiler.IsEnabled;
+            if (burst && !((bool?)args["allowBurst"] ?? false)) throw new InvalidOperationException("managed_geometry_launch_required_or_explicit_allowBurst");
             string operation = (string)args["operationId"];
             int passes = (int?)args["maxPasses"] ?? 1;
             if (string.IsNullOrWhiteSpace(operation) || operation.Length > 160 || passes < 1 || passes > 4)
@@ -60,6 +62,7 @@ namespace CitiesIIAgentBridge
                 } catch { harmony.UnpatchAll(GeometryTraceOwner); throw; }
             }
             geometryTraceOperation = operation; geometryTraceCity = citySession;
+            geometryTraceBurstEnabled = burst;
             geometryTraceRemaining = passes; geometryTracePass = 0; geometryTraceSequence = 0;
             geometryTraceFault = null; geometryTraceEvents = new JArray();
             geometryTraceAllowed = () => !disposed && citySession == geometryTraceCity
@@ -73,7 +76,8 @@ namespace CitiesIIAgentBridge
             ["passesStarted"] = geometryTracePass, ["insideCapturedPass"] = geometryTraceCycle,
             ["fault"] = geometryTraceFault, ["events"] = geometryTraceEvents.DeepClone(),
             ["gameSha256"] = GeometryTraceGameHash,
-            ["instrumentation"] = "Original jobs and schedulers; explicit completion barriers before/after captured stages; managed launch"
+            ["burstEnabledAtArm"] = geometryTraceBurstEnabled,
+            ["instrumentation"] = "Original jobs and schedulers; explicit completion barriers before/after captured stages; Burst setting recorded, individual worker compilation not inferred"
         };
 
         private static JObject EndGeometryScheduleTrace()
@@ -111,20 +115,22 @@ namespace CitiesIIAgentBridge
                     var types = method.GetGenericArguments();
                     string job = types[0].FullName;
                     if (method.DeclaringType == typeof(JobChunkExtensions) && method.Name == "ScheduleParallel"
-                        && (job == "Game.Net.GeometrySystem+InitializeNodeGeometryJob" || job == "Game.Net.GeometrySystem+FlattenNodeGeometryJob")) {
+                        && (job == "Game.Net.GeometrySystem+InitializeNodeGeometryJob" || job == "Game.Net.GeometrySystem+FlattenNodeGeometryJob"
+                            || job == "Game.Net.GeometrySystem+UpdateNodeGeometryJob")) {
                         instruction.operand = typeof(Mod).GetMethod(nameof(TraceScheduleGeometryChunk)).MakeGenericMethod(types);
                         replaced++;
                     } else if (method.DeclaringType == typeof(IJobParallelForDeferExtensions) && method.Name == "Schedule"
                         && types.Length == 2 && types[1] == typeof(Entity)
                         && (job == "Game.Net.GeometrySystem+CalculateEdgeGeometryJob" || job == "Game.Net.GeometrySystem+FinishEdgeGeometryJob"
-                            || job == "Game.Net.GeometrySystem+CalculateNodeGeometryJob")) {
+                            || job == "Game.Net.GeometrySystem+CalculateNodeGeometryJob" || job == "Game.Net.GeometrySystem+CalculateIntersectionGeometryJob"
+                            || job == "Game.Net.GeometrySystem+CopyNodeGeometryJob")) {
                         instruction.operand = typeof(Mod).GetMethod(nameof(TraceScheduleGeometryEdges)).MakeGenericMethod(types);
                         replaced++;
                     }
                 }
                 yield return instruction;
             }
-            if (replaced != 5) throw new InvalidOperationException("geometry_schedule_call_sites_changed:" + replaced);
+            if (replaced != 8) throw new InvalidOperationException("geometry_schedule_call_sites_changed:" + replaced);
         }
 
         public static JobHandle TraceScheduleGeometryChunk<T>(T job, EntityQuery query, JobHandle dependency) where T : struct, IJobChunk
@@ -216,6 +222,7 @@ namespace CitiesIIAgentBridge
             if (++geometryTraceSequence > 128) throw new InvalidOperationException("capture_file_limit_128");
             report["sequence"] = geometryTraceSequence; report["pass"] = geometryTracePass;
             report["citySession"] = geometryTraceCity; report["frame"] = UnityEngine.Time.frameCount;
+            report["burstEnabledAtArm"] = geometryTraceBurstEnabled;
             report["boundary"] = "Completed native dependency/job handle at original scheduling site";
             report["instrumentation"] = "Native stage ordering retained; completion barriers and chunk read handles may affect timing/change versions";
             string path = SaveGeometryDiagnostic(report, geometryTraceOperation);
