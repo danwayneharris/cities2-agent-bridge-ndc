@@ -27,6 +27,7 @@ foreach ($reference in $references) {
 if ($ResearchHarmonyPath) {
     if (!(Test-Path -LiteralPath $ResearchHarmonyPath -PathType Leaf)) { throw 'Research Harmony DLL missing' }
     $response += '/define:GEOMETRY_RESEARCH_SCHEDULE_TRACE'
+    $response += '/unsafe+' # Bounded read-only native bucket capture; research build only.
     $response += '/reference:"' + [IO.Path]::GetFullPath($ResearchHarmonyPath) + '"'
 }
 Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'src') -Filter '*.cs' | ForEach-Object { $response += '"' + $_.FullName + '"' }

@@ -183,6 +183,9 @@ namespace CitiesIIAgentBridge
             var type = value.GetType();
             if (value is Game.Simulation.TerrainHeightData terrain) return CaptureGeometryTerrain(terrain);
             if (value is NativeParallelHashMap<int2, float4> map) {
+#if GEOMETRY_RESEARCH_SCHEDULE_TRACE
+                return CaptureGeometryHeightMap(map);
+#else
                 if (!map.IsCreated) throw new InvalidOperationException("height_map_not_created");
                 var pairs = new JArray();
                 foreach (var pair in map) {
@@ -191,6 +194,7 @@ namespace CitiesIIAgentBridge
                         ["value"] = new JArray(pair.Value.x, pair.Value.y, pair.Value.z, pair.Value.w) });
                 }
                 return new JObject { ["storage"] = "NativeParallelHashMap<int2,float4>", ["entries"] = pairs };
+#endif
             }
             if (type.IsGenericType && (type.GetGenericTypeDefinition() == typeof(NativeArray<>) || type.GetGenericTypeDefinition() == typeof(NativeList<>))) {
                 string name = type.GetGenericTypeDefinition() == typeof(NativeArray<>) ? nameof(CaptureGeometryArray) : nameof(CaptureGeometryList);

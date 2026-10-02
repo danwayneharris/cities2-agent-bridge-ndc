@@ -24,3 +24,24 @@ test preserved all eight signatures but the negative test still expected the old
 Eight native scheduling signatures now pass offline comparison; seven/nine sites
 are rejected. Evidence: NT artifacts/offline-research/eight-stage-schedules-02.json.
 No live use yet; source committed before deployment.
+
+a26e58e deployed after checkpoint 52cc3407b0134edfa019f64b834789aa, graceful close,
+and exact-baseline launch with Burst enabled. Four full-stage captures retained:
+preview (24 files), Apply (36), linear control (24), arch held-out (24). The first
+preview exceeded 15 s client deadline but recovered unchanged after heartbeat
+resumed; tracing disarmed. NT now uses 45 s for these bounded research calls.
+
+Historical 1.844445 m discrepancy reproduced with Burst enabled. Offline permanent
+Initialize/Edge/Flatten map agree exactly, but Finish fails to apply one map entry
+in native output. Linear and arch also diverge first at Finish. Preview passes all
+eight stages. This makes dictionary substitution a concrete suspect: enumeration
+does not establish keyed lookup equivalence. No claim of a Burst compiler defect.
+
+Add bounded native hash-map bucket/chain copies and managed TryGetValue probes for
+each stored key at completed boundaries. Use public GetUnsafeBucketData, validated
+capacity/mask/index/cycle bounds; never write or dispose borrowed storage, serialize
+addresses, or read unoccupied value slots. Research-only unsafe compilation is
+needed for this public pointer API. This new addition is not yet deployed/validated.
+
+Bucket-capture compile passes with only the existing updater warnings. It remains
+undeployed; retain current runtime a26e58e until a checkpointed graceful restart.
