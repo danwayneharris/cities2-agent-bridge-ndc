@@ -12,3 +12,5 @@ absent/uncaptured data, and reports frontier/error limits explicitly. No deploym
 or live use yet. Native stage-boundary instrumentation remains required.
 
 Compile-only build passed (two pre-existing obsolete updater warnings). The installed-type test rejected Game.Common.Hidden: the capture inventory used the wrong namespace. No live capture was attempted. Preserve this failed contract check before correction. The sandbox account blocked script execution; running the existing build under the toolchain owner succeeded without changing execution policy.
+
+Corrected Hidden to Game.Tools.Hidden using installed-source identity. Build and all 29 installed component/buffer contracts now pass; compiled EntityManager call inspection allows reads and the explicit completion barrier only. This is compile/API validation, not runtime capture qualification. No game restart, deployment or mutation occurred. Capture command bypasses dispatcher auto-pause and rejects an unpaused city.

@@ -124,7 +124,7 @@ namespace CitiesIIAgentBridge
             "Game.Net.NodeGeometry", "Game.Net.EdgeGeometry", "Game.Net.StartNodeGeometry", "Game.Net.EndNodeGeometry",
             "Game.Net.Composition", "Game.Net.OutsideConnection", "Game.Net.ConnectedEdge", "Game.Net.SubNet",
             "Game.Objects.SubObject", "Game.Common.Owner", "Game.Common.Updated", "Game.Common.Created",
-            "Game.Common.Deleted", "Game.Common.Hidden", "Game.Tools.Temp", "Game.Prefabs.PrefabRef",
+            "Game.Common.Deleted", "Game.Tools.Hidden", "Game.Tools.Temp", "Game.Prefabs.PrefabRef",
             "Game.Prefabs.NetGeometryData", "Game.Prefabs.NetCompositionData", "Game.Prefabs.PlaceableNetData",
             "Game.Prefabs.PlaceableObjectData", "Game.Prefabs.ObjectGeometryData", "Game.Prefabs.NetLaneData",
             "Game.Prefabs.NetCompositionLane", "Game.Prefabs.NetCompositionCrosswalk", "Game.Prefabs.NetCompositionPiece"
