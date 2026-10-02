@@ -181,6 +181,7 @@ namespace CitiesIIAgentBridge
         private static JToken CaptureGeometryContainer(object value, Action<Entity> enqueue)
         {
             var type = value.GetType();
+            if (value is Game.Simulation.TerrainHeightData terrain) return CaptureGeometryTerrain(terrain);
             if (value is NativeParallelHashMap<int2, float4> map) {
                 if (!map.IsCreated) throw new InvalidOperationException("height_map_not_created");
                 var pairs = new JArray();
@@ -196,7 +197,7 @@ namespace CitiesIIAgentBridge
                 var method = typeof(Mod).GetMethod(name, BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(type.GetGenericArguments());
                 return (JToken)method.Invoke(null, new object[] { value, enqueue });
             }
-            // ParallelWriter and terrain native pointers are deliberately rejected.
+            // ParallelWriter and other unsupported native pointers are rejected.
             return CaptureGeometryValue(value, enqueue, 0);
         }
 

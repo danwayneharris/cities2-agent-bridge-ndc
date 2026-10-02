@@ -183,8 +183,32 @@ namespace CitiesIIAgentBridge
                 for (int i = 0; i < ids.Length; i++) ids[i] = (Entity)(object)list[i];
                 var report = CaptureGeometryJobState(capturedJob, ids, null, phase, geometryTraceOperation);
                 report["deferredCaptureArray"] = "Resolved from completed native schedule list in capture copy only";
+                if (phase == "entry" && typeof(T).Name == "CalculateEdgeGeometryJob")
+                    report["nativeOffsetProbe"] = CaptureGeometryOffsetProbe(capturedJob, ids);
                 PublishGeometryScheduleCapture(report);
             } catch (Exception error) { GeometryTraceCaptureFault(error); }
+        }
+
+        private static JObject CaptureGeometryOffsetProbe(object job, Entity[] roots)
+        {
+            var method = job.GetType().GetMethod("CalculateOffsets", BindingFlags.Public | BindingFlags.Instance);
+            if (method == null || roots.Length > 128) throw new InvalidOperationException("native_offset_probe_contract");
+            var parameters = method.GetParameters(); var rows = new JArray();
+            foreach (var entity in roots) {
+                var args = new object[parameters.Length]; args[0] = entity;
+                // Original helper reads the same completed world. It writes out-args,
+                // not ECS components. This is an extra native computation, not a
+                // claim that the original scheduled Execute has already run.
+                method.Invoke(job, args);
+                var outputs = new JObject();
+                for (int i = 1; i < parameters.Length; i++) {
+                    if (!parameters[i].IsOut) throw new InvalidOperationException("offset_parameter_contract_changed");
+                    outputs[parameters[i].Name] = CaptureGeometryValue(args[i], e => { }, 0);
+                }
+                rows.Add(new JObject { ["entity"] = new JArray(entity.Index, entity.Version), ["outputs"] = outputs });
+            }
+            return new JObject { ["scope"] = "Original CalculateOffsets recomputed before scheduling, with completed dependencies; not worker locals",
+                ["rows"] = rows, ["complete"] = true };
         }
 
         private static void PublishGeometryScheduleCapture(JObject report)
