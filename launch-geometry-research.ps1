@@ -4,7 +4,8 @@ param(
     [Parameter(Mandatory)][string]$SaveSha256,
     [string]$GamePath=[Environment]::GetEnvironmentVariable('CSII_INSTALLATIONPATH','User'),
     [switch]$Launch,
-    [switch]$EnableBurst
+    [switch]$EnableBurst,
+    [string[]]$AdditionalArguments = @()
 )
 $ErrorActionPreference='Stop'
 if((Get-FileHash -LiteralPath $SavePath -Algorithm SHA256).Hash -ne $SaveSha256){throw 'Baseline hash changed'}
@@ -15,6 +16,8 @@ if(!(Test-Path -LiteralPath $exe -PathType Leaf)){throw 'Game executable missing
 if(Get-Process Cities2 -ErrorAction SilentlyContinue){throw 'Game already running'}
 if(!(Get-Process steam -ErrorAction SilentlyContinue)){throw 'Licensed Steam client must be running'}
 $arguments=@('--noSplash','--developerMode','--uiDeveloperMode',"--startGame=$id")
+if (@($AdditionalArguments | Where-Object { $_ -notmatch '^--[A-Za-z][A-Za-z0-9-]*$' -or $_ -match '^--(startGame|burst-|batchmode|nographics)' }).Count) { throw 'Additional arguments must be simple opt-in flags, not lifecycle, graphics or Burst overrides' }
+$arguments += $AdditionalArguments
 if(!$EnableBurst){$arguments+='--burst-disable-compilation'}
 [pscustomobject]@{Executable=$exe;Save=(Resolve-Path $SavePath).Path;MetadataId=$id;Arguments=$arguments;BurstRequested=[bool]$EnableBurst;Instrumentation='Native scheduling-boundary capture; independently verify runtime Burst state'}
 if(!$Launch){return}
