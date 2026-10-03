@@ -10,7 +10,9 @@ Compile-only verification:
 .\tests\GeometryResearchCaptureTests.ps1 -GamePath <installed-game-directory>
 ```
 
-The command is not deployed or live-qualified yet. Use live identities after
+The raw/scheduled capture path has bounded live qualification recorded in
+[the map-capture handoff](session-notes/2026-10-02-0615-map-capture-qualified.md).
+This does not qualify every debugger helper or arbitrary network. Use live identities after
 checkpoint/session verification. Capture original and temporary roots in one call
 when both exist. Serialize and retain the entire response unchanged.
 
@@ -83,3 +85,15 @@ resolving its deferred entity array from the completed producer. Other stages an
 unarmed passes use their original schedulers. Execution mode is recorded in status
 and each capture. Pass count, controls, STOP, pause and city-session limits remain.
 This tests a compatibility hypothesis; it does not install a persistent fix.
+
+## Publication and consumer boundary
+
+See [the publication note](session-notes/2026-10-03-0304-PR-offline-capture.md) for the
+paired offline replay PR and verification. Capture schemas are generic game
+geometry diagnostics; consumer algorithms and runtime corrections belong to
+consumer repositories. No consumer mod is required to build or use the bridge.
+
+Schedule tracing requires an explicit `-ResearchHarmonyPath` build and explicit
+arming. Ordinary builds omit the scheduling patch. Do not arm the research
+transpiler alongside another GeometrySystem scheduler transpiler; interoperability
+has not been qualified. Raw captures and game binaries remain local/ignored.
