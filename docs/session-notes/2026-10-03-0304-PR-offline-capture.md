@@ -22,3 +22,12 @@ consumer's negative suites pass; no game mutation/deployment was performed.
 First research build used an obsolete local Harmony path and stopped before
 compilation. Resolved the installed lib.harmony 2.2.2 net48 path and reran
 successfully. New compile/API evidence does not substitute for live execution.
+
+## Published review links
+
+Companion PR: https://github.com/danwayneharris/CS2-NetworkTools/pull/16
+
+NetworkTools #16 targets main; #15 is stacked above it. Bridge #7 targets its
+own main. They can be reviewed independently and have no assembly/release
+dependency. Archive branch: `archive/combined-before-offline-split-20261003`
+in NetworkTools preserves the complete pre-extraction feature/research history.
