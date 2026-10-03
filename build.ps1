@@ -1,6 +1,7 @@
 param([string]$GamePath = 'C:\Program Files (x86)\Steam\steamapps\common\Cities Skylines II',
     [string]$OutputDirectory = (Join-Path $PSScriptRoot 'artifacts'),
-    [switch]$CommunityRelease)
+    [switch]$CommunityRelease,
+    [string]$ResearchHarmonyPath)
 $ErrorActionPreference = 'Stop'
 $managed = Join-Path $GamePath 'Cities2_Data\Managed'
 if (!(Test-Path -LiteralPath (Join-Path $managed 'Game.dll'))) { throw 'Game.dll not found' }
@@ -23,6 +24,12 @@ foreach ($reference in $references) {
     if (!(Test-Path -LiteralPath $path)) { throw "Missing reference: $path" }
     $response += '/reference:"' + $path + '"'
 }
+if ($ResearchHarmonyPath) {
+    if (!(Test-Path -LiteralPath $ResearchHarmonyPath -PathType Leaf)) { throw 'Research Harmony DLL missing' }
+    $response += '/define:GEOMETRY_RESEARCH_SCHEDULE_TRACE'
+    $response += '/unsafe+' # Bounded read-only native bucket capture; research build only.
+    $response += '/reference:"' + [IO.Path]::GetFullPath($ResearchHarmonyPath) + '"'
+}
 Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'src') -Filter '*.cs' | ForEach-Object { $response += '"' + $_.FullName + '"' }
 $rsp = Join-Path $out 'compile.rsp'
 [IO.File]::WriteAllLines($rsp, $response)
@@ -34,6 +41,11 @@ $manifest = [ordered]@{
     gameAssemblySha256 = (Get-FileHash -LiteralPath (Join-Path $managed 'Game.dll')).Hash
     dllSha256 = (Get-FileHash -LiteralPath (Join-Path $out 'CitiesIIAgentBridge.dll')).Hash
     compilation = 'Managed IMod with derived native tools; no new components, SystemAPI, or Burst jobs'
+    researchScheduleTrace = [bool]$ResearchHarmonyPath
+}
+if ($ResearchHarmonyPath) {
+    Copy-Item -LiteralPath $ResearchHarmonyPath -Destination (Join-Path $out '0Harmony.dll') -Force
+    $manifest.harmonySha256 = (Get-FileHash -LiteralPath $ResearchHarmonyPath).Hash
 }
 $manifest | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $out 'build-manifest.json') -Encoding utf8
 Write-Output "Built: $(Join-Path $out 'CitiesIIAgentBridge.dll')"

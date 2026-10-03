@@ -77,6 +77,9 @@ namespace CitiesIIAgentBridge
 
         public void OnDispose()
         {
+#if GEOMETRY_RESEARCH_SCHEDULE_TRACE
+            EndGeometryScheduleTrace();
+#endif
             FinishSimulation("mod_disposed");
             disposed = true; providers = null;
             if (GameManager.instance != null)
@@ -159,7 +162,7 @@ namespace CitiesIIAgentBridge
         private JObject Dispatch(string command, JObject args)
         {
             // These status polls must not terminate an active bounded simulation step.
-            bool statusOnly = (command == "list_providers" || command == "invoke_provider") || command == "get_junction_snapshot" || command == "get_junction_preview" || command == "ping" || command == "get_capabilities" || command == "get_operation" || command == "get_batch" || command == "get_simulation_step";
+            bool statusOnly = command == "begin_geometry_schedule_trace" || command == "get_geometry_schedule_trace" || command == "end_geometry_schedule_trace" || command == "get_geometry_research_capture" || (command == "list_providers" || command == "invoke_provider") || command == "get_junction_snapshot" || command == "get_junction_preview" || command == "ping" || command == "get_capabilities" || command == "get_operation" || command == "get_batch" || command == "get_simulation_step";
             if(!statusOnly && command != "simulate_step" && command != "cancel_simulation_step" && command != "set_simulation_speed" && command != "set_camera")
             {
                 if(settings.AllowControl) PauseAnalysis();
@@ -230,6 +233,12 @@ namespace CitiesIIAgentBridge
                 case "get_build_prefabs": return BuildPrefabs(args);
                 case "get_prefab_details": return PrefabDetails(args);
                 case "get_network": return Network(args);
+#if GEOMETRY_RESEARCH_SCHEDULE_TRACE
+                case "begin_geometry_schedule_trace": return BeginGeometryScheduleTrace(args);
+                case "get_geometry_schedule_trace": return GeometryScheduleTraceStatus();
+                case "end_geometry_schedule_trace": return EndGeometryScheduleTrace();
+#endif
+                case "get_geometry_research_capture": return GeometryResearchCapture(args);
                 case "get_junction_snapshot": return JunctionSnapshot(args); case "get_junction_preview": return JunctionPreview(args);
                 case "get_network_edges": return NetworkEdges(args);
                 case "trace_network": return NetworkPath(args);
